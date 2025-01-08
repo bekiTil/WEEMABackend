@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_filters",
     "user_management",
     "authentication",
+    "cluster_management"
 ]
 
 MIDDLEWARE = [

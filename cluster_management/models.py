@@ -1,0 +1,146 @@
+from django.db import models
+from user_management.models import WEEMAEntities
+from WEEMA.models import BaseModel
+
+# Cluster Model
+class Cluster(BaseModel):
+    cluster_name = models.CharField(max_length=255)
+    status = models.CharField(max_length=50, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
+    total_groups = models.PositiveIntegerField(default=0)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    cluster_manager = models.ForeignKey(WEEMAEntities, on_delete=models.SET_NULL, null=True, related_name="coordinated_clusters")
+
+    def increment_total_groups(self):
+        self.total_groups += 1
+        self.save()
+
+    def decrement_total_groups(self):
+        if self.total_groups > 0:
+            self.total_groups -= 1
+            self.save()
+
+    def __str__(self):
+        return self.cluster_name
+
+
+
+# Self Help Group Model
+class SelfHelpGroup(BaseModel):
+    group_name = models.CharField(max_length=255)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, related_name="groups")
+    group_leader = models.ForeignKey(WEEMAEntities, on_delete=models.SET_NULL, null=True, related_name="led_groups")
+    total_members = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=50, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
+    location = models.CharField(max_length=255, null=True, blank=True)
+
+    def increment_totals(self):
+        self.total_members += 1
+        self.save()
+
+    def decrement_totals(self):
+        if self.total_members > 0:
+            self.total_members -= 1
+        self.save()
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        if not is_new:
+            old_cluster = SelfHelpGroup.objects.get(pk=self.pk).cluster
+            if old_cluster != self.cluster:
+                old_cluster.decrement_total_groups()
+                self.cluster.increment_total_groups()
+        else:
+            self.cluster.increment_total_groups()
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        cluster = self.cluster
+        super().delete(*args, **kwargs)
+        cluster.decrement_total_groups()
+
+    def __str__(self):
+        return self.group_name
+
+
+
+# Member Model
+class Member(BaseModel):
+    GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+    ]
+
+    MARITAL_STATUS_CHOICES = [
+        ('single', 'Single'),
+        ('married', 'Married'),
+        ('divorced', 'Divorced'),
+        ('widowed', 'Widowed'),
+    ]
+
+    RELIGION_CHOICES = [
+        ('christianity', 'Christianity'),
+        ('islam', 'Islam'),
+        ('traditional', 'Traditional'),
+        ('other', 'Other'),
+    ]
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    age = models.PositiveIntegerField()
+    hh_size = models.PositiveIntegerField(null=True, blank=True)  # Household size
+    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, null=True, blank=True)
+    religion = models.CharField(max_length=20, choices=RELIGION_CHOICES, null=True, blank=True)
+    is_other_shg_member_in_house = models.BooleanField(default=False)
+    how_many_shg_members = models.PositiveIntegerField(null=True, blank=True)
+    is_responsible_for_children = models.BooleanField(default=False)
+    contact_details = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Inactive', 'Inactive')], default='Active')
+    group = models.ForeignKey('SelfHelpGroup', on_delete=models.CASCADE, related_name="members")
+    
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        if not is_new:
+            old_group = Member.objects.get(pk=self.pk).group
+            if old_group != self.group:
+                old_group.decrement_totals()
+                self.group.increment_totals()
+        else:
+            self.group.increment_totals()
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        group = self.group
+        super().delete(*args, **kwargs)
+        group.decrement_totals()
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+# New SixMonthSaving Model
+class SixMonthSaving(BaseModel):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="six_month_savings")
+    active_iga = models.BooleanField(default=False)  # Income Generating Activity (IGA)
+    iga_activity_code = models.PositiveIntegerField(null=True, blank=True)
+    iga_capital = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    loan_amount_received_shg = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    loans_received_other_sources = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    other_loans_sources = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    purpose_of_loan_code = models.PositiveIntegerField(null=True, blank=True)
+    approx_monthly_personal_income = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    approx_monthly_household_income = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    meals_per_day_children = models.PositiveIntegerField(null=True, blank=True)
+    meals_per_day_adult = models.PositiveIntegerField(null=True, blank=True)
+    
+    source_code = models.PositiveIntegerField(null=True, blank=True)
+    source_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    days_diarrhea_children = models.PositiveIntegerField(null=True, blank=True)
+    days_other_illness_children = models.PositiveIntegerField(null=True, blank=True)
+    days_diarrhea_adults = models.PositiveIntegerField(null=True, blank=True)
+    days_other_illness_adults = models.PositiveIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Six Month Saving for {self.member}"
