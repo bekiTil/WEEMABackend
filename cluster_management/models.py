@@ -43,7 +43,7 @@ class SelfHelpGroup(BaseModel):
         self.save()
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        is_new = self._state.adding
         if not is_new:
             old_cluster = SelfHelpGroup.objects.get(pk=self.pk).cluster
             if old_cluster != self.cluster:
@@ -100,7 +100,7 @@ class Member(BaseModel):
     group = models.ForeignKey('SelfHelpGroup', on_delete=models.CASCADE, related_name="members")
     
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        is_new = self._state.adding
         if not is_new:
             old_group = Member.objects.get(pk=self.pk).group
             if old_group != self.group:
