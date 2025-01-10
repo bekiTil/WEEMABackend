@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cluster, SelfHelpGroup, Member, SixMonthSaving
+from .models import Cluster, SelfHelpGroup, Member
 
 class ClusterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,9 +14,4 @@ class SelfHelpGroupSerializer(serializers.ModelSerializer):
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = '__all__'
-
-class SixMonthSavingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SixMonthSaving
         fields = '__all__'

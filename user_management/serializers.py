@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import Group
 from .models import CustomUser, WEEMAEntities
+from django.db import transaction
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:

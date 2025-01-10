@@ -7,6 +7,7 @@ from .mixins import ProfileUpdateMixin
 from .pagination import CustomPageNumberPagination
 from .permissions import GroupPermission
 from .utils.cloudinary_helper import handle_multiple_uploads
+from rest_framework.response import Response
 
 class CustomUserViewSet(ModelViewSet):
     user_permissions = {

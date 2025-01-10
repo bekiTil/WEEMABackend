@@ -120,27 +120,3 @@ class Member(BaseModel):
         return f"{self.first_name} {self.last_name}"
 
 
-# New SixMonthSaving Model
-class SixMonthSaving(BaseModel):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="six_month_savings")
-    active_iga = models.BooleanField(default=False)  # Income Generating Activity (IGA)
-    iga_activity_code = models.PositiveIntegerField(null=True, blank=True)
-    iga_capital = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    loan_amount_received_shg = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    loans_received_other_sources = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    other_loans_sources = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    purpose_of_loan_code = models.PositiveIntegerField(null=True, blank=True)
-    approx_monthly_personal_income = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    approx_monthly_household_income = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    meals_per_day_children = models.PositiveIntegerField(null=True, blank=True)
-    meals_per_day_adult = models.PositiveIntegerField(null=True, blank=True)
-    
-    source_code = models.PositiveIntegerField(null=True, blank=True)
-    source_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    days_diarrhea_children = models.PositiveIntegerField(null=True, blank=True)
-    days_other_illness_children = models.PositiveIntegerField(null=True, blank=True)
-    days_diarrhea_adults = models.PositiveIntegerField(null=True, blank=True)
-    days_other_illness_adults = models.PositiveIntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Six Month Saving for {self.member}"

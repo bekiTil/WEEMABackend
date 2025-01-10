@@ -1,8 +1,8 @@
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import Cluster, SelfHelpGroup, Member, SixMonthSaving
-from .serializers import ClusterSerializer, SelfHelpGroupSerializer, MemberSerializer, SixMonthSavingSerializer
+from .models import Cluster, SelfHelpGroup, Member
+from .serializers import ClusterSerializer, SelfHelpGroupSerializer, MemberSerializer
 
 
 # Cluster ViewSet
@@ -41,26 +41,3 @@ class MemberViewSet(ModelViewSet):
     ]
     search_fields = ['first_name', 'last_name', 'name']
     ordering_fields = ['age', 'hh_size', 'created_at', 'updated_at']
-
-
-# Six Month Saving ViewSet
-class SixMonthSavingViewSet(ModelViewSet):
-    queryset = SixMonthSaving.objects.all()
-    serializer_class = SixMonthSavingSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = [
-        'active_iga',
-        'iga_activity_code',
-        'member',
-        'loan_amount_received_shg',
-        'loans_received_other_sources',
-        'source_code'
-    ]
-    search_fields = ['member__first_name', 'member__last_name']
-    ordering_fields = [
-        'iga_capital',
-        'approx_monthly_personal_income',
-        'approx_monthly_household_income',
-        'created_at',
-        'updated_at'
-    ]
