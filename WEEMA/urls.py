@@ -43,6 +43,7 @@ urlpatterns = [
     path("api/v1/user/", include("cluster_management.urls")),
     path("api/v1/user/analytics/", include("analytics.urls")),
     path("api/v1/user/", include("data_collection.urls")),
+    path("api/v1/user/", include("meeting_tracker.urls")),
     
     
     re_path(r'^api/v1/user/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     "authentication",
     "cluster_management",
     "analytics",
-    "data_collection"
+    "data_collection",
+    "meeting_tracker"
 ]
 
 MIDDLEWARE = [
