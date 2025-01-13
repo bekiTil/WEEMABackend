@@ -37,7 +37,7 @@ class SixMonthData(BaseModel):
     iga_capital = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     loan_amount_received_shg = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Loan Amount Received in Period (SHG)")
     loan_source_code = models.CharField(max_length=50, blank=True, null=True, verbose_name="Source (Code)", choices=LOAN_SOURCE_CHOICES)
-    loan_amount_from_from_other_sources = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Amount from other Source")
+    loan_amount_from_other_sources = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Amount from other Source")
     
     purpose_of_loan = models.CharField(max_length=50, choices=PURPOSE_CHOICES)
     approx_monthly_personal_income = models.DecimalField(max_digits=10, decimal_places=2)

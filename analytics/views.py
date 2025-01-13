@@ -1,14 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Count, Sum, Avg
-from data_collection.models import SixMonthData, AnnualData
+from django.db.models import Count, Sum, Avg, Max, Min, F, Q
+from data_collection.models import SixMonthData, AnnualData, AnnualChildrenStatus
 from cluster_management.models import SelfHelpGroup, Cluster, Member
 from user_management.models import CustomUser
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import AnonymousUser
 from django.db.models.functions import TruncMonth
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 
 class SystemLevelReportView(APIView):
@@ -290,3 +291,181 @@ class DashboardMetricsView(APIView):
             {"month": entry['month'].strftime('%Y-%m'), "total_members": entry['total_members']}
             for entry in growth_data
         ]
+
+class LoanSavingReportView(APIView):
+    """
+    Loan and Saving Report, aggregated for a given cluster or self-help group.
+    """
+
+    def get(self, request, entity_type, entity_id):
+        """
+        Handles reports for either a cluster or a self-help group based on entity_type.
+        
+        entity_type: 'cluster' or 'group'
+        entity_id: ID of the cluster or group
+        """
+        if entity_type == 'cluster':
+            try:
+                entity = Cluster.objects.get(id=entity_id)
+                groups = SelfHelpGroup.objects.filter(cluster=entity)
+                members = Member.objects.filter(group__in=groups)
+                entity_name = entity.cluster_name
+                total_groups = groups.count()
+            except Cluster.DoesNotExist:
+                return Response({"error": "Cluster not found"}, status=status.HTTP_404_NOT_FOUND)
+        elif entity_type == 'group':
+            try:
+                entity = SelfHelpGroup.objects.get(id=entity_id)
+                members = Member.objects.filter(group=entity)
+                entity_name = entity.group_name
+                total_groups = None  
+            except SelfHelpGroup.DoesNotExist:
+                return Response({"error": "SelfHelpGroup not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error": "Invalid entity type. Use 'cluster' or 'group'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        max_loan_round = SixMonthData.objects.filter(member__in=members).aggregate(max_loan=Max('loan_amount_received_shg'))['max_loan']
+
+        iga_capital_range = SixMonthData.objects.filter(member__in=members).aggregate(
+            min_iga=Min('iga_capital'), max_iga=Max('iga_capital')
+        )
+
+        # Amount of loan received from other sources
+        total_loan_other_sources = SixMonthData.objects.filter(member__in=members).aggregate(
+            total_loan_other_sources=Sum('loan_amount_from_other_sources')
+        )['total_loan_other_sources']
+
+        # Amount of loan taken per category (purpose of loan)
+        loan_by_purpose = SixMonthData.objects.filter(member__in=members).values('loan_purpose').annotate(
+            total_loan=Sum('loan_amount_received_shg')
+        )
+
+        # Range of member’s regular saving
+        savings_range = AnnualData.objects.filter(member__in=members).aggregate(
+            min_savings=Min('total_savings'), max_savings=Max('total_savings')
+        )
+        response_data = {
+            'entity': entity_name,
+            'total_members': members.count(),
+            'max_loan_round': max_loan_round,
+            'iga_capital_range': iga_capital_range,
+            'total_loan_other_sources': total_loan_other_sources,
+            'loan_by_purpose': loan_by_purpose,
+            'savings_range': savings_range,
+        }
+
+        if total_groups is not None:  
+            response_data['total_shgs'] = total_groups
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class MemberDataReportView(APIView):
+    """
+    API to fetch member-level report for a group, cluster, or a specific member.
+    """
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Determine the type of report based on URL parameters
+            group_id = kwargs.get("group_id")
+            cluster_id = kwargs.get("cluster_id")
+            member_id = kwargs.get("member_id")
+
+            if group_id:
+                # Fetch members for the given group
+                group = get_object_or_404(SelfHelpGroup, id=group_id)
+                context = {"group_id": group_id}
+                members = Member.objects.filter(group=group)
+
+            elif cluster_id:
+                # Fetch members for the given cluster
+                cluster = get_object_or_404(Cluster, id=cluster_id)
+                groups = SelfHelpGroup.objects.filter(cluster=cluster)
+                members = Member.objects.filter(group__in=groups)
+                context = {"cluster_id": cluster_id}
+
+            elif member_id:
+                # Fetch a single member
+                member = get_object_or_404(Member, id=member_id)
+                members = [member]
+                context = {"member_id": member_id}
+
+            else:
+                return Response(
+                    {"error": "Invalid request. Provide either group_id, cluster_id, or member_id."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not members:
+                return Response({"error": "No members found."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Prepare data
+            data = self.get_member_data(members)
+
+            # Add context to the response
+            context["data"] = data
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_member_data(self, members):
+        """
+        Helper method to fetch and aggregate member-level data.
+        """
+        data = []
+        for member in members:
+            data.append(self.get_single_member_data(member))
+        return data
+
+    def get_single_member_data(self, member):
+        """
+        Helper method to fetch data for a single member.
+        """
+        six_month_data = SixMonthData.objects.filter(member=member).order_by('-created_at').first()
+        annual_data = AnnualData.objects.filter(member=member).order_by('-created_at').first()
+        children_status = AnnualChildrenStatus.objects.filter(member=member).order_by('-created_at').first()
+
+        total_household_size = annual_data.household_size if annual_data else None
+        avg_meals_per_day = (
+            six_month_data.aggregate(
+                avg_meals=Avg(F("meals_per_day_for_children") + F("meals_per_day_for_adults"))
+            )["avg_meals"]
+            if six_month_data.exists()
+            else None
+        )
+        total_child_morbidity = (
+            six_month_data.aggregate(
+                morbidity=Sum(F("days_diarrhea_children") + F("days_other_illness_children"))
+            )["morbidity"]
+            if six_month_data.exists()
+            else None
+        )
+        total_child_mortality = annual_data.mortality_children_under_5 if annual_data else None
+
+        school_age_children = 0
+        enrolled_children = 0
+
+        if children_status:
+            for i in range(1, 6):  # Assuming up to 5 children per member
+                school_status = getattr(children_status, f"child_{i}_school_status", None)
+                if school_status:
+                    school_age_children += 1
+                    if school_status == "enrolled":
+                        enrolled_children += 1
+
+        percentage_school_enrollment = (
+            (enrolled_children / school_age_children) * 100 if school_age_children > 0 else None
+        )
+
+        return {
+            "member_id": member.id,
+            "member_name": member.name,
+            "location": member.cluster.location.name if member.cluster else None,
+            "total_household_size": total_household_size,
+            "average_meals_per_day": avg_meals_per_day,
+            "total_child_morbidity": total_child_morbidity,
+            "total_child_mortality": total_child_mortality,
+            "percentage_school_enrollment": percentage_school_enrollment,
+        }
