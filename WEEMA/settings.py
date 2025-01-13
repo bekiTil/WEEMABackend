@@ -15,6 +15,7 @@ from datetime import timedelta
 import environ
 import os
 import cloudinary
+import dj_database_url
 
 # Initialize environ
 env = environ.Env(
@@ -114,14 +115,11 @@ WSGI_APPLICATION = "WEEMA.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER':env('DB_USERNAME'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),       
-    }
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default=env('DB_HOST'),
+        conn_max_age=600
+    )
 }
 
 cloudinary.config(
