@@ -158,9 +158,10 @@ class DashboardMetricsView(APIView):
         # Determine user type
         user = request.user
         
-        # if isinstance(request.user, AnonymousUser):
-        #     return JsonResponse({'error': 'Invalid user type'}, status=403)
         user_type = 'super_admin'
+        if not isinstance(request.user, AnonymousUser):
+            user_type = user.user_type
+        
 
         # Extract cluster_id or group_id from request query parameters
         cluster_id = request.query_params.get('cluster_id', None)
@@ -188,7 +189,7 @@ class DashboardMetricsView(APIView):
                                                             cluster_id=cluster_id, 
                                                             group_id=group_id
                                                         ),
-                "entities": self.get_entity_counts(),
+                "entities": self.get_entity_growth_graph(start_date=start_date, end_date=end_date,cluster_id=cluster_id )
             }
             return Response(data, status=status.HTTP_200_OK)
 
@@ -232,6 +233,35 @@ class DashboardMetricsView(APIView):
             return Response(data, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid user type"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_entity_growth_graph(self, start_date, end_date, cluster_id=None):
+        """
+        Generate data for entity growth graph over time (e.g., monthly), divided by user type.
+        """
+        filters = {}
+        if start_date and end_date:
+            filters['created_at__range'] = [start_date, end_date]
+        if cluster_id:
+            filters['cluster_id'] = cluster_id  # Assuming users are linked to clusters
+
+        # Group by month and user type, then count new users
+        growth_data = (
+            CustomUser.objects.filter(user_type__in=['facilitator', 'cluster_manager', 'shg_lead'], **filters)
+            .annotate(month=TruncMonth('created_at'))
+            .values('month', 'user_type')
+            .annotate(total_users=Count('id'))
+            .order_by('month', 'user_type')
+        )
+
+        # Convert to a list of dictionaries for graph consumption
+        return [
+            {
+                "month": entry['month'].strftime('%Y-%m'),
+                "user_type": entry['user_type'],
+                "total_users": entry['total_users']
+            }
+            for entry in growth_data
+        ]
 
     def get_member_growth(self, start_date, end_date, cluster_id=None, group_id=None):
         """
