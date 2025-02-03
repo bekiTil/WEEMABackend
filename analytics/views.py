@@ -11,6 +11,8 @@ from django.db.models.functions import TruncMonth
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+import csv
+from django.http import HttpResponse
 
 class SystemLevelReportView(APIView):
     """
@@ -137,15 +139,19 @@ class SelfHelpGroupLevelReportView(APIView):
         total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
 
-        return Response({
-            'group': group.group_name,
-            'total_members': total_members,
-            'total_household_size': total_household_size,
-            'total_savings': total_savings,
-            'total_capital': total_capital,
-            'total_loan_circulated': total_loan_circulated,
-            'average_iga_capital': average_iga_capital,
-        }, status=status.HTTP_200_OK)
+        csv_data = [
+            ['Group Name', 'Total Members', 'Total Household Size', 'Total Savings', 'Total Capital', 'Total Loan Circulated', 'Average IGA Capital'],
+            [group.group_name, total_members, total_household_size, total_savings, total_capital, total_loan_circulated, average_iga_capital],
+        ]
+
+        # Create the CSV response
+        csv_response = HttpResponse(content_type='text/csv')
+        csv_response['Content-Disposition'] = f'attachment; filename="{group.group_name}_report.csv"'
+        
+        writer = csv.writer(csv_response)
+        writer.writerows(csv_data)
+
+        return csv_response
         
         
 class DashboardMetricsView(APIView):
@@ -374,20 +380,32 @@ class LoanSavingReportView(APIView):
         savings_range = AnnualData.objects.filter(member__in=members).aggregate(
             min_savings=Min('total_savings'), max_savings=Max('total_savings')
         )
-        response_data = {
-            'entity': entity_name,
-            'total_members': members.count(),
-            'max_loan_round': max_loan_round,
-            'iga_capital_range': iga_capital_range,
-            'total_loan_other_sources': total_loan_other_sources,
-            'loan_by_purpose': loan_by_purpose,
-            'savings_range': savings_range,
-        }
+        
+        # Prepare CSV data
+        csv_data = [
+            ['Entity', 'Total Members', 'Max Loan Round', 'Min IGA Capital', 'Max IGA Capital', 
+             'Total Loan from Other Sources', 'Loan by Purpose', 'Min Savings', 'Max Savings'],
+            [
+                entity_name,
+                members.count(),
+                max_loan_round,
+                iga_capital_range['min_iga'],
+                iga_capital_range['max_iga'],
+                total_loan_other_sources,
+                ', '.join([f"{item['loan_purpose']}: {item['total_loan']}" for item in loan_by_purpose]),
+                savings_range['min_savings'],
+                savings_range['max_savings'],
+            ],
+        ]
 
-        if total_groups is not None:  
-            response_data['total_shgs'] = total_groups
+        # Create the CSV response
+        csv_response = HttpResponse(content_type='text/csv')
+        csv_response['Content-Disposition'] = f'attachment; filename="{entity_name}_loan_saving_report.csv"'
+        
+        writer = csv.writer(csv_response)
+        writer.writerows(csv_data)
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        return csv_response
 
 
 class MemberDataReportView(APIView):
@@ -396,7 +414,7 @@ class MemberDataReportView(APIView):
     """
 
     def get(self, request, *args, **kwargs):
-        try:
+        # try:
             # Determine the type of report based on URL parameters
             group_id = kwargs.get("group_id")
             cluster_id = kwargs.get("cluster_id")
@@ -406,6 +424,7 @@ class MemberDataReportView(APIView):
                 # Fetch members for the given group
                 group = get_object_or_404(SelfHelpGroup, id=group_id)
                 context = {"group_id": group_id}
+                location = group.cluster.location
                 members = Member.objects.filter(group=group)
 
             elif cluster_id:
@@ -414,12 +433,14 @@ class MemberDataReportView(APIView):
                 groups = SelfHelpGroup.objects.filter(cluster=cluster)
                 members = Member.objects.filter(group__in=groups)
                 context = {"cluster_id": cluster_id}
+                location =  cluster.location
 
             elif member_id:
                 # Fetch a single member
                 member = get_object_or_404(Member, id=member_id)
                 members = [member]
-                context = {"member_id": member_id}
+                context = {"member_id": member_id} 
+                location = member.group.cluster.location
 
             else:
                 return Response(
@@ -431,25 +452,24 @@ class MemberDataReportView(APIView):
                 return Response({"error": "No members found."}, status=status.HTTP_404_NOT_FOUND)
 
             # Prepare data
-            data = self.get_member_data(members)
+            data = self.get_member_data(members,location = location)
 
-            # Add context to the response
-            context["data"] = data
-            return Response(context, status=status.HTTP_200_OK)
+            # Generate CSV response
+            return self.generate_csv_response(data)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # except Exception as e:
+        #     return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_member_data(self, members):
+    def get_member_data(self, members, location):
         """
         Helper method to fetch and aggregate member-level data.
         """
         data = []
         for member in members:
-            data.append(self.get_single_member_data(member))
+            data.append(self.get_single_member_data(member,location))
         return data
 
-    def get_single_member_data(self, member):
+    def get_single_member_data(self, member,location):
         """
         Helper method to fetch data for a single member.
         """
@@ -462,14 +482,14 @@ class MemberDataReportView(APIView):
             six_month_data.aggregate(
                 avg_meals=Avg(F("meals_per_day_for_children") + F("meals_per_day_for_adults"))
             )["avg_meals"]
-            if six_month_data.exists()
+            if six_month_data != None
             else None
         )
         total_child_morbidity = (
             six_month_data.aggregate(
                 morbidity=Sum(F("days_diarrhea_children") + F("days_other_illness_children"))
             )["morbidity"]
-            if six_month_data.exists()
+            if six_month_data != None
             else None
         )
         total_child_mortality = annual_data.mortality_children_under_5 if annual_data else None
@@ -491,11 +511,45 @@ class MemberDataReportView(APIView):
 
         return {
             "member_id": member.id,
-            "member_name": member.name,
-            "location": member.cluster.location.name if member.cluster else None,
+            "member_name": member.first_name + " " + member.last_name,
+            "location": location,
             "total_household_size": total_household_size,
             "average_meals_per_day": avg_meals_per_day,
             "total_child_morbidity": total_child_morbidity,
             "total_child_mortality": total_child_mortality,
             "percentage_school_enrollment": percentage_school_enrollment,
         }
+    
+    def generate_csv_response(self, data):
+        """
+        Generate CSV response from data.
+        """
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="member_data_report.csv"'
+
+        writer = csv.writer(response)
+        headers = [
+            "Member ID",
+            "Member Name",
+            "Location",
+            "Total Household Size",
+            "Average Meals Per Day",
+            "Total Child Morbidity",
+            "Total Child Mortality",
+            "Percentage School Enrollment",
+        ]
+        writer.writerow(headers)
+
+        for row in data:
+            writer.writerow([
+                row["member_id"],
+                row["member_name"],
+                row["location"],
+                row["total_household_size"],
+                row["average_meals_per_day"],
+                row["total_child_morbidity"],
+                row["total_child_mortality"],
+                row["percentage_school_enrollment"],
+            ])
+
+        return response
