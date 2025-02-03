@@ -9,6 +9,7 @@ class Cluster(BaseModel):
     total_groups = models.PositiveIntegerField(default=0)
     location = models.CharField(max_length=255, null=True, blank=True)
     cluster_manager = models.ForeignKey(WEEMAEntities, on_delete=models.SET_NULL, null=True, related_name="coordinated_clusters")
+    description = models.TextField(blank=True, null=True)
 
     def increment_total_groups(self):
         self.total_groups += 1
@@ -32,6 +33,7 @@ class SelfHelpGroup(BaseModel):
     total_members = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=50, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
     location = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
 
     def increment_totals(self):
         self.total_members += 1

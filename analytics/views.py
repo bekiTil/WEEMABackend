@@ -424,7 +424,7 @@ class MemberDataReportView(APIView):
                 # Fetch members for the given group
                 group = get_object_or_404(SelfHelpGroup, id=group_id)
                 context = {"group_id": group_id}
-                location = group.cluster.location
+                location = group.location
                 members = Member.objects.filter(group=group)
 
             elif cluster_id:
@@ -440,7 +440,7 @@ class MemberDataReportView(APIView):
                 member = get_object_or_404(Member, id=member_id)
                 members = [member]
                 context = {"member_id": member_id} 
-                location = member.group.cluster.location
+                location = member.group.location
 
             else:
                 return Response(
