@@ -414,7 +414,7 @@ class MemberDataReportView(APIView):
     """
 
     def get(self, request, *args, **kwargs):
-        # try:
+        try:
             # Determine the type of report based on URL parameters
             group_id = kwargs.get("group_id")
             cluster_id = kwargs.get("cluster_id")
@@ -457,8 +457,8 @@ class MemberDataReportView(APIView):
             # Generate CSV response
             return self.generate_csv_response(data)
 
-        # except Exception as e:
-        #     return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_member_data(self, members, location):
         """
