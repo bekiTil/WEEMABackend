@@ -77,8 +77,6 @@ class WEEMAEntitiesViewSet(ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()  
-
-        url_name = resolve(request.path_info).url_name 
         
         return self.update_profile(
             request=request,
