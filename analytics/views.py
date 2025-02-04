@@ -167,7 +167,7 @@ class SelfHelpGroupLevelReportView(APIView):
 
             return csv_response
         
-        return Response(report_data, status=status.HTTP_200_OK)
+        return Response(json_report_data, status=status.HTTP_200_OK)
             
         
 class DashboardMetricsView(APIView):
