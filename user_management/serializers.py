@@ -66,8 +66,6 @@ class WEEMAEntitiesSerializer(serializers.ModelSerializer):
             'phone_number',
             'gender',
             'address',
-            'cluster_id',
-            'group_id',
             'national_id',
             'profile_picture',
             'last_login',
