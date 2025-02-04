@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.contrib.auth.models import User
 from WEEMA.models import BaseModel
-from cluster_management.models import Cluster, SelfHelpGroup
 import uuid
 
 class CustomUser(AbstractUser):
