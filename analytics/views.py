@@ -138,21 +138,37 @@ class SelfHelpGroupLevelReportView(APIView):
         total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
         total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
-
-        csv_data = [
-            ['Group Name', 'Total Members', 'Total Household Size', 'Total Savings', 'Total Capital', 'Total Loan Circulated', 'Average IGA Capital'],
-            [group.group_name, total_members, total_household_size, total_savings, total_capital, total_loan_circulated, average_iga_capital],
-        ]
-
-        # Create the CSV response
-        csv_response = HttpResponse(content_type='text/csv')
-        csv_response['Content-Disposition'] = f'attachment; filename="{group.group_name}_report.csv"'
         
-        writer = csv.writer(csv_response)
-        writer.writerows(csv_data)
-
-        return csv_response
+        # Prepare data response
+        json_report_data = {
+            "group_name": group.group_name,
+            "total_members": total_members,
+            "total_household_size": total_household_size,
+            "total_savings": total_savings,
+            "total_capital": total_capital,
+            "total_loan_circulated": total_loan_circulated,
+            "average_iga_capital": average_iga_capital,
+        }
         
+        response_format = request.query_params.get('format', 'json')
+
+        if response_format == 'csv':
+            csv_data = [
+                ['Group Name', 'Total Members', 'Total Household Size', 'Total Savings', 'Total Capital', 'Total Loan Circulated', 'Average IGA Capital'],
+                [group.group_name, total_members, total_household_size, total_savings, total_capital, total_loan_circulated, average_iga_capital],
+            ]
+
+            # Create the CSV response
+            csv_response = HttpResponse(content_type='text/csv')
+            csv_response['Content-Disposition'] = f'attachment; filename="{group.group_name}_report.csv"'
+            
+            writer = csv.writer(csv_response)
+            writer.writerows(csv_data)
+
+            return csv_response
+        
+        return Response(report_data, status=status.HTTP_200_OK)
+            
         
 class DashboardMetricsView(APIView):
     """
