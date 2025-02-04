@@ -39,8 +39,6 @@ class WEEMAEntities(BaseModel):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')], blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    cluster = models.ForeignKey(Cluster, on_delete=models.SET_NULL, related_name="entity_cluster", null = True)
-    group_id = models.ForeignKey(SelfHelpGroup, on_delete=models.SET_NULL, related_name="entity_group", null = True)
     national_id = models.CharField(max_length=20, blank=True, null=True)
     profile_picture = models.URLField(null=True)
     last_login = models.DateTimeField(auto_now=True)
