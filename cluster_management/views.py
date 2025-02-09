@@ -20,8 +20,8 @@ class SelfHelpGroupViewSet(ModelViewSet):
     queryset = SelfHelpGroup.objects.all()
     serializer_class = SelfHelpGroupSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'location', 'cluster', 'group_leader']
-    search_fields = ['group_name', 'location']
+    filterset_fields = ['status', 'location', 'cluster', 'group_leader', 'facilitator', 'longitude', 'latitude']
+    search_fields = ['group_name', 'location', 'facilitator']
     ordering_fields = ['group_name', 'total_members', 'created_at', 'updated_at']
 
 
@@ -37,7 +37,8 @@ class MemberViewSet(ModelViewSet):
         'religion',
         'is_other_shg_member_in_house',
         'is_responsible_for_children',
-        'group'
+        'group',
+        'hh_size'
     ]
-    search_fields = ['first_name', 'last_name', 'name']
+    search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
     ordering_fields = ['age', 'hh_size', 'created_at', 'updated_at']
