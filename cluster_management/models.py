@@ -28,13 +28,31 @@ class Cluster(BaseModel):
 # Self Help Group Model
 class SelfHelpGroup(BaseModel):
     group_name = models.CharField(max_length=255)
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, related_name="groups")
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, related_name="groups", null=True, blank=True)
+    facilitator = models.ForeignKey(
+        WEEMAEntities,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="facilitated_groups"
+    )
     group_leader = models.ForeignKey(WEEMAEntities, on_delete=models.SET_NULL, null=True, related_name="led_groups")
     total_members = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=50, choices=[('Active', 'Active'), ('Inactive', 'Inactive')])
     location = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
+    def clean(self):
+        # A group must be associated with either a cluster or a facilitator,
+        # but not both at the same time.
+        if not self.cluster and not self.facilitator:
+            raise ValidationError("A group must be associated with either a cluster or a facilitator.")
+        if self.cluster and self.facilitator:
+            raise ValidationError("A group cannot be associated with both a cluster and a facilitator at the same time.")
+
+    
     def increment_totals(self):
         self.total_members += 1
         self.save()
@@ -45,6 +63,7 @@ class SelfHelpGroup(BaseModel):
         self.save()
 
     def save(self, *args, **kwargs):
+        self.clean()
         is_new = self._state.adding
         if not is_new:
             old_cluster = SelfHelpGroup.objects.get(pk=self.pk).cluster
