@@ -18,7 +18,7 @@ from django.http import HttpResponse
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from io import BytesIO
 from datetime import datetime
@@ -670,37 +670,49 @@ class LocationLevelAnalyticsPDFView(APIView):
             group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster)
 
         # Create a BytesIO buffer for the PDF
+        # Create a BytesIO buffer for the PDF
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=20, rightMargin=20, topMargin=40, bottomMargin=40)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=40)
         elements = []
         styles = getSampleStyleSheet()
 
+        # Define a custom centered title style
+        title_style = ParagraphStyle(
+            'CenteredTitle',
+            parent=styles['Heading2'],
+            alignment=1,  # Center alignment
+            spaceAfter=12  # Adds space after the title
+        )
+
         # Define an improved table style
         table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#7ff5b2")),  # Light greenish header background
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#DDE6DD")),  # Light greenish header background
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # Black text for header
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
             ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # Default background
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),  # Alternating row colors
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
         ])
+
+        # Adjust column widths for better spacing
+        column_widths = [120, 100, 100, 120, 100, 100, 150]  # Adjust as needed
 
         # Helper function to add a section
         def add_section(title, data):
-            elements.append(Paragraph(title, styles['Heading2']))
+            elements.append(Paragraph(title, title_style))  # Centered title
             elements.append(Spacer(1, 12))
-            table = Table(data, colWidths=[80, 100, 70, 70, 80, 70, 90])  # Adjusted column widths
+            table = Table(data, colWidths=column_widths)
             table.setStyle(table_style)
             elements.append(table)
             elements.append(Spacer(1, 24))
-
         # Add each report as a section
         if  hh_report: add_section("Member Household Report", hh_report)
         if loan_saving_report: add_section("Member Loan & Saving Report", loan_saving_report)
