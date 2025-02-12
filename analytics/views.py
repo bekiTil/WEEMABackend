@@ -233,9 +233,9 @@ class DashboardMetricsView(APIView):
                 return Response({"error": "Cluster ID is required for cluster managers."}, status=status.HTTP_400_BAD_REQUEST)
 
             data = {
-                "total_groups": SelfHelpGroup.objects.filter(cluster_id=cluster_id).count(),
-                "total_members": Member.objects.filter(group__cluster_id=cluster_id).count(),
-                "total_savings": AnnualData.objects.filter(member__group__cluster_id=cluster_id).aggregate(
+                "total_groups": SelfHelpGroup.objects.filter(cluster=cluster_id).count(),
+                "total_members": Member.objects.filter(group__cluster=cluster_id).count(),
+                "total_savings": AnnualData.objects.filter(member__group__cluster=cluster_id).aggregate(
                     total_savings=Sum('total_savings')
                 )['total_savings'],
                 "member_growth": self.get_member_growth_graph(
@@ -275,8 +275,8 @@ class DashboardMetricsView(APIView):
         filters = {}
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
-        if cluster_id:
-            filters['cluster_id'] = cluster_id  # Assuming users are linked to clusters
+        # if cluster_id:
+        #     filters['cluster'] = cluster_id  # Assuming users are linked to clusters
 
         # Group by month and user type, then count new users
         growth_data = (
@@ -305,7 +305,7 @@ class DashboardMetricsView(APIView):
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
         if cluster_id:
-            filters['group__cluster_id'] = cluster_id
+            filters['group__cluster'] = cluster_id
         if group_id:
             filters['group_id'] = group_id
 
@@ -337,9 +337,9 @@ class DashboardMetricsView(APIView):
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
         if cluster_id:
-            filters['group__cluster_id'] = cluster_id
+            filters['group__cluster'] = cluster_id
         if group_id:
-            filters['group_id'] = group_id
+            filters['group'] = group_id
 
         # Group by month and count new members
         growth_data = (
