@@ -1,6 +1,7 @@
 from django.db import models
 from user_management.models import WEEMAEntities
 from WEEMA.models import BaseModel
+from django.core.exceptions import ValidationError
 
 # Cluster Model
 class Cluster(BaseModel):

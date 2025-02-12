@@ -673,7 +673,7 @@ class LocationLevelAnalyticsPDFView(APIView):
         # Create a BytesIO buffer for the PDF
         # Create a buffer for PDF output
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=30, bottomMargin=30)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=0, bottomMargin=30)
         elements = []
         styles = getSampleStyleSheet()
 
@@ -708,7 +708,7 @@ class LocationLevelAnalyticsPDFView(APIView):
         logo_right_path = logo_left_path  # Change to your actual logo path
 
         # Load logos
-        logo_left = Image(logo_left_path, width=80, height=80)
+        logo_left = Image(logo_left_path, width=110, height=110)
 
         # Company Name & Report Details
         company_name = Paragraph("<b>WEEMA</b>", styles["Title"])
@@ -725,17 +725,19 @@ class LocationLevelAnalyticsPDFView(APIView):
         header_table = Table(header_data, colWidths=[800])
         header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#B6D7A8")),  # Light green background
-            ('SPAN', (1, 0), (1, 0)),  # Company Name spans across columns
-            ('SPAN', (1, 1), (1, 1)),  # Report Title spans across columns
-            ('SPAN', (1, 2), (1, 2)),  # Report Date spans across columns
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align everything
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Vertically center text
-            ('FONTNAME', (1, 0), (1, 2), 'Helvetica-Bold'),  # Bold font for important text
-            ('FONTSIZE', (1, 0), (1, 0), 14),  # Larger font for Company Name
-            ('FONTSIZE', (1, 1), (1, 1), 12),  # Slightly larger font for Report Title
-            ('FONTSIZE', (1, 2), (1, 2), 10),  # Normal font for Report Date
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),  # Reduced font size for better fit
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
         ]))
 
         # Add header table to the document
