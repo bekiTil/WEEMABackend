@@ -43,16 +43,16 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
         total_household_size = members.aggregate(total=Sum('hh_size'))['total'] or 0
 
         # Aggregate financial metrics using related data (filtered by date range if provided)
-        total_savings = (AnnualData.objects.filter(member__in=members, **filters).filter(date_filter)
+        total_savings = (AnnualData.objects.filter(member__in=members).filter(date_filter)
                             .aggregate(total=Sum('total_savings', output_field=DecimalField()))['total'] or 0)
 
-        total_capital = (SixMonthData.objects.filter(member__in=members, **filters).filter(date_filter)
+        total_capital = (SixMonthData.objects.filter(member__in=members).filter(date_filter)
                             .aggregate(total=Sum('iga_capital', output_field=DecimalField()))['total'] or 0)
 
-        total_loan_circulated = (SixMonthData.objects.filter(member__in=members, **filters).filter(date_filter)
+        total_loan_circulated = (SixMonthData.objects.filter(member__in=members).filter(date_filter)
                                     .aggregate(total=Sum('loan_amount_received_shg', output_field=DecimalField()))['total'] or 0)
 
-        average_iga_capital = (SixMonthData.objects.filter(member__in=members, **filters).filter(date_filter)
+        average_iga_capital = (SixMonthData.objects.filter(member__in=members).filter(date_filter)
                                 .aggregate(avg=Avg('iga_capital', output_field=DecimalField()))['avg'] or 0)
 
         report_data.append([
@@ -129,10 +129,10 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
             total_loan_other_sources=Sum('loan_amount_from_other_sources', output_field=DecimalField())
         )['total_loan_other_sources']
         
-        loan_by_purpose_qs = SixMonthData.objects.filter(member__in=members).filter(date_filter).values('loan_purpose').annotate(
+        loan_by_purpose_qs = SixMonthData.objects.filter(member__in=members).filter(date_filter).values('purpose_of_loan').annotate(
             total_loan=Sum('loan_amount_received_shg', output_field=DecimalField())
         )
-        loan_by_purpose = ', '.join([f"{item['loan_purpose']}: {item['total_loan']}" for item in loan_by_purpose_qs])
+        loan_by_purpose = ', '.join([f"{item['purpose_of_loan']}: {item['total_loan']}" for item in loan_by_purpose_qs])
         
         # Aggregations from AnnualData for these members
         savings_range = AnnualData.objects.filter(member__in=members).filter(date_filter).aggregate(

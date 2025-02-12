@@ -1,7 +1,7 @@
 from django.db.models import Sum, Max, Avg, DecimalField, F
 from django.db.models.functions import Coalesce
 from cluster_management.models import SelfHelpGroup, Member
-from data_collection.models import AnnualData, SixMonthData
+from data_collection.models import AnnualData, SixMonthData, AnnualSelfHelpGroupData, AnnualSelfHelpGroupData
 from django.utils.dateparse import parse_datetime
 from django.db.models.functions import Cast
 
@@ -91,10 +91,12 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
         groups_qs = groups_qs.filter(cluster=cluster)
     
     
+    
     results = {}
     
     # Loop over each group in the queryset.
     for group in groups_qs:
+        print(group.group_name)
         # Get all members in this group
         members = Member.objects.filter(group=group)
         if not members.exists():
@@ -116,9 +118,11 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
         if not total_capital: total_capital = 0
         
         # # Total Expenditure from AnnualData: sum of total_expenditure
-        # total_expenditure = AnnualData.objects.filter(member__in=members, **filters).aggregate(
-        #     total=Coalesce(Sum('total_expenditure'), 0)
-        # )['total']
+        total_expenditure = AnnualSelfHelpGroupData.objects.filter(group=group, **filters).aggregate(
+            total=Sum('expenditure_social_savings')
+        )['total']
+        
+        if not total_expenditure: total_expenditure = 0
         
         # IGA Capital: average of iga_capital
         avg_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(
@@ -138,7 +142,7 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
         results[group.group_name] = {
             "weekly_saving": round(weekly_saving, 2),
             "total_capital": round(total_capital, 2),
-            # "total_expenditure": round(total_expenditure, 2),
+            "total_expenditure": round(total_expenditure, 2),
             "iga_capital": round(avg_iga_capital, 2),
             "approx_monthly_income": round(avg_monthly_income, 2)
         }
