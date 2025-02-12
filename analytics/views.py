@@ -17,7 +17,7 @@ from django.http import HttpResponse
 # ReportLab imports
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 
 from io import BytesIO
@@ -671,35 +671,40 @@ class LocationLevelAnalyticsPDFView(APIView):
 
         # Create a BytesIO buffer for the PDF
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=20, rightMargin=20, topMargin=40, bottomMargin=40)
         elements = []
         styles = getSampleStyleSheet()
 
-        # Define a table style for all tables
+        # Define an improved table style
         table_style = TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,0), 10),
-            ('BOTTOMPADDING', (0,0), (-1,0), 8),
-            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#7ff5b2")),  # Light greenish header background
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # Black text for header
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # Default background
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),  # Alternating row colors
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ])
 
-        # A helper function to add a section to the PDF
+        # Helper function to add a section
         def add_section(title, data):
             elements.append(Paragraph(title, styles['Heading2']))
             elements.append(Spacer(1, 12))
-            table = Table(data)
+            table = Table(data, colWidths=[80, 100, 70, 70, 80, 70, 90])  # Adjusted column widths
             table.setStyle(table_style)
             elements.append(table)
             elements.append(Spacer(1, 24))
 
         # Add each report as a section
-        if  hh_report: add_section("Location Level Household Report", hh_report)
-        if loan_saving_report: add_section("Location Level Loan & Saving Report", loan_saving_report)
-        if group_report: add_section("Location Level Group Report", group_report)
+        if  hh_report: add_section("Member Household Report", hh_report)
+        if loan_saving_report: add_section("Member Loan & Saving Report", loan_saving_report)
+        if group_report: add_section("SHG Data Report", group_report)
 
         # Build the PDF document
         doc.build(elements)

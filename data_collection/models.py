@@ -190,7 +190,7 @@ class AnnualChildrenStatus(BaseModel):
 
 
 
-class AnnualSelfHelpGroupData(models.Model):
+class AnnualSelfHelpGroupData(BaseModel):
     group = models.ForeignKey(SelfHelpGroup, on_delete=models.CASCADE, related_name="annualGroupData")
     amount_regular_saving = models.DecimalField(max_digits=10, decimal_places=2)
     shg_capital = models.DecimalField(max_digits=10, decimal_places=2)
