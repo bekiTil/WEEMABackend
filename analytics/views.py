@@ -15,7 +15,7 @@ from django.http import JsonResponse
 import csv
 from django.http import HttpResponse
 # ReportLab imports
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -24,7 +24,8 @@ from io import BytesIO
 from datetime import datetime
 
 from .utils.analytics_util import get_location_level_group_report, get_location_level_loan_saving_report, get_location_level_hh_report  
-
+import os
+from django.conf import settings
 
 class SystemLevelReportView(APIView):
     """
@@ -651,8 +652,8 @@ class LocationLevelAnalyticsPDFView(APIView):
         end_date_str = request.query_params.get('end_date', None)
         cluster = request.query_params.get('cluster', None)  # This might be an ID or a string
         hh_data = request.query_params.get('hh_data', "Hello")
-        shg_data = request.query_params.get('shg_data', None)
-        member_data = request.query_params.get('member_data', None)
+        shg_data = request.query_params.get('shg_data', "None")
+        member_data = request.query_params.get('member_data', "None")
 
         # Parse dates if provided
         start_date = parse_datetime(start_date_str) if start_date_str else None
@@ -670,50 +671,87 @@ class LocationLevelAnalyticsPDFView(APIView):
             group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster)
 
         # Create a BytesIO buffer for the PDF
-        # Create a BytesIO buffer for the PDF
+        # Create a buffer for PDF output
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=40)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=30, bottomMargin=30)
         elements = []
         styles = getSampleStyleSheet()
 
-        # Define a custom centered title style
+        # Define a centered title style
         title_style = ParagraphStyle(
             'CenteredTitle',
             parent=styles['Heading2'],
-            alignment=1,  # Center alignment
-            spaceAfter=12  # Adds space after the title
+            alignment=1,  # Centered
+            spaceAfter=6  # Reduce space after the title
         )
 
         # Define an improved table style
         table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#DDE6DD")),  # Light greenish header background
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # Black text for header
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#B6D7A8")),  # Light green header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('TOPPADDING', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # Default background
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),  # Alternating row colors
+            ('FONTSIZE', (0, 0), (-1, 0), 9),  # Reduced font size for better fit
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('LEFTPADDING', (0, 0), (-1, -1), 5),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('WORDWRAP', (0, 0), (-1, -1), True),
         ])
 
-        # Adjust column widths for better spacing
-        column_widths = [120, 100, 100, 120, 100, 100, 150]  # Adjust as needed
+        # ======= Add HEADER with Logo, Company Name, Title & Date =======
+        logo_left_path = os.path.join(settings.BASE_DIR, 'logo_real.png')  # Change to your actual logo path
+        logo_right_path = logo_left_path  # Change to your actual logo path
 
-        # Helper function to add a section
+        # Load logos
+        logo_left = Image(logo_left_path, width=80, height=80)
+
+        # Company Name & Report Details
+        company_name = Paragraph("<b>WEEMA</b>", styles["Title"])
+        report_title = Paragraph("<b>Self Help Group (SHG) Data Summary Report</b>", styles["Heading2"])
+        report_date = Paragraph(f"Date of Report: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"])
+
+        # Create Header Table
+        header_data = [
+            [logo_left],  # Row 1: Logos & Company Name
+            [report_title],  # Row 2: Report Title
+            [report_date]  # Row 3: Report Date
+        ]
+
+        header_table = Table(header_data, colWidths=[800])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#B6D7A8")),  # Light green background
+            ('SPAN', (1, 0), (1, 0)),  # Company Name spans across columns
+            ('SPAN', (1, 1), (1, 1)),  # Report Title spans across columns
+            ('SPAN', (1, 2), (1, 2)),  # Report Date spans across columns
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align everything
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Vertically center text
+            ('FONTNAME', (1, 0), (1, 2), 'Helvetica-Bold'),  # Bold font for important text
+            ('FONTSIZE', (1, 0), (1, 0), 14),  # Larger font for Company Name
+            ('FONTSIZE', (1, 1), (1, 1), 12),  # Slightly larger font for Report Title
+            ('FONTSIZE', (1, 2), (1, 2), 10),  # Normal font for Report Date
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ]))
+
+        # Add header table to the document
+        elements.append(header_table)
+        elements.append(Spacer(1, 12))  # Add some space after the header
+
+        # ======= Add Reports =======
         def add_section(title, data):
-            elements.append(Paragraph(title, title_style))  # Centered title
-            elements.append(Spacer(1, 12))
-            table = Table(data, colWidths=column_widths)
+            if not data:
+                return
+            elements.append(Paragraph(title, title_style))
+            elements.append(Spacer(1, 6))
+            table = Table(data)
             table.setStyle(table_style)
             elements.append(table)
-            elements.append(Spacer(1, 24))
-        # Add each report as a section
+            elements.append(Spacer(1, 12))# Add each report as a section
         if  hh_report: add_section("Member Household Report", hh_report)
         if loan_saving_report: add_section("Member Loan & Saving Report", loan_saving_report)
         if group_report: add_section("SHG Data Report", group_report)

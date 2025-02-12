@@ -64,21 +64,21 @@ class SelfHelpGroup(BaseModel):
 
     def save(self, *args, **kwargs):
         self.clean()
-        is_new = self._state.adding
-        if not is_new:
-            old_cluster = SelfHelpGroup.objects.get(pk=self.pk).cluster
-            if old_cluster != self.cluster:
-                old_cluster.decrement_total_groups()
-                self.cluster.increment_total_groups()
-        else:
-            self.cluster.increment_total_groups()
+        # is_new = self._state.adding
+        # if not is_new:
+        #     old_cluster = SelfHelpGroup.objects.get(pk=self.pk).cluster
+        #     if old_cluster != self.cluster:
+        #         old_cluster.decrement_total_groups()
+        #         self.cluster.increment_total_groups()
+        # else:
+        #     self.cluster.increment_total_groups()
 
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         cluster = self.cluster
         super().delete(*args, **kwargs)
-        cluster.decrement_total_groups()
+        # cluster.decrement_total_groups()
 
     def __str__(self):
         return self.group_name
@@ -122,20 +122,20 @@ class Member(BaseModel):
     
     def save(self, *args, **kwargs):
         is_new = self._state.adding
-        if not is_new:
-            old_group = Member.objects.get(pk=self.pk).group
-            if old_group != self.group:
-                old_group.decrement_totals()
-                self.group.increment_totals()
-        else:
-            self.group.increment_totals()
+        # if not is_new:
+        #     old_group = Member.objects.get(pk=self.pk).group
+        #     if old_group != self.group:
+        #         old_group.decrement_totals()
+        #         self.group.increment_totals()
+        # else:
+        #     self.group.increment_totals()
 
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         group = self.group
         super().delete(*args, **kwargs)
-        group.decrement_totals()
+        # group.decrement_totals()
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

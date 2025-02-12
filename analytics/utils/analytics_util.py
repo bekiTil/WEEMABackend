@@ -24,7 +24,7 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
                     .values_list('location', flat=True)
                     .distinct())
 
-    report_data = [["location", "total_groups", "total_members", "total_household_size", "total_savings", "total_capital", "total_loan_circulated","average_iga_capital"]]
+    report_data = [["Location", "Total Groups", "Total Members", "Total hh size", "Total Savings", "Total Capital", "Total Loan Circulated","Avg Iga Capital"]]
 
     # For each unique location, aggregate analytics across groups and members
     for loc in locations:
@@ -95,12 +95,10 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
             "Entity", 
             "Total Members", 
             "Max Loan Round", 
-            "Min IGA Capital", 
-            "Max IGA Capital", 
-            "Total Loan from Other Sources", 
+            "IGA Capital Range",  
+            "Total Other Loans", 
             "Loan by Purpose", 
-            "Min Savings", 
-            "Max Savings"
+            "Savings Range", 
         ]
     ]
     
@@ -140,17 +138,21 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
             max_savings=Max('total_savings', output_field=DecimalField())
         )
         
+        iga_min =iga_capital_range.get('min_iga') if  iga_capital_range.get('min_iga') else 0
+        iga_max = iga_capital_range.get('max_iga') if  iga_capital_range.get('max_iga') else 0
+        saving_min = savings_range.get('min_savings') if  savings_range.get('min_savings') else 0
+        saving_max = savings_range.get('max_savings') if savings_range.get('max_savings') else 0
+        
         # Append row of aggregated data for the current location
         row = [
             loc,
             total_members,
             max_loan_round,
-            iga_capital_range.get('min_iga'),
-            iga_capital_range.get('max_iga'),
+            str(iga_min) + " - "+ str(iga_max),
             total_loan_other_sources,
             loan_by_purpose,
-            savings_range.get('min_savings'),
-            savings_range.get('max_savings')
+            str(saving_min) + " - " + str(saving_max),
+            
         ]
         csv_data.append(row)
     
@@ -191,7 +193,7 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
             "Average Meals Per Day",
             "Total Child Morbidity",
             "Total Child Mortality",
-            "Percentage School Enrollment",
+            "% School Enrollment",
         ]
     ]
 
