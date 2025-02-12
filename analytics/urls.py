@@ -6,8 +6,10 @@ from .views import (
     DashboardMetricsView,
     LoanSavingReportView,
     MemberDataReportView,
-    FacilitatorAnalyticsView
+    FacilitatorAnalyticsView,
+    LocationLevelAnalyticsPDFView
 )
+from .graph_views import LocationAnalyticsGraphsPDFView, GroupLevelFinancialMetricsAPIView
 
 urlpatterns = [
     path('reports/system/', SystemLevelReportView.as_view(), name='system-level-report'),
@@ -19,4 +21,7 @@ urlpatterns = [
     path('reports/member-data/group/<uuid:group_id>/', MemberDataReportView.as_view(), name="group_member_report"),
     path('reports/member-data/cluster/<uuid:cluster_id>/', MemberDataReportView.as_view(), name="cluster_member_report"),
     path('reports/member-data/member/<uuid:member_id>/', MemberDataReportView.as_view(), name="member_specific_report"),
+    path('reports/pdf/table/', LocationLevelAnalyticsPDFView.as_view(), name="pdf_table_report"),
+    path('reports/pdf/graph/highlevel', LocationAnalyticsGraphsPDFView.as_view(), name="pdf_graph_heigh_level_report"),
+    path('reports/pdf/graph/quality-control', GroupLevelFinancialMetricsAPIView.as_view(), name="pdf_graph_quality_control_report"),
 ]

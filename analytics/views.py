@@ -14,6 +14,17 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import csv
 from django.http import HttpResponse
+# ReportLab imports
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+
+from io import BytesIO
+from datetime import datetime
+
+from .utils.analytics_util import get_location_level_group_report, get_location_level_loan_saving_report, get_location_level_hh_report  
+
 
 class SystemLevelReportView(APIView):
     """
@@ -625,3 +636,74 @@ class FacilitatorAnalyticsView(APIView):
             'total_loan_circulated': total_loan_circulated,
             'average_iga_capital': average_iga_capital,
         }, status=status.HTTP_200_OK)
+
+
+class LocationLevelAnalyticsPDFView(APIView):
+    """
+    API View that compiles three location-level analytics reports (household, loan-saving, and group)
+    into one PDF file with styled tables. The header row is bold and has a background color.
+    Accepts optional query parameters: start_date, end_date, and cluster.
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Parse optional query parameters
+        start_date_str = request.query_params.get('start_date', None)
+        end_date_str = request.query_params.get('end_date', None)
+        cluster = request.query_params.get('cluster', None)  # This might be an ID or a string
+        hh_data = request.query_params.get('hh_data', "Hello")
+        shg_data = request.query_params.get('shg_data', None)
+        member_data = request.query_params.get('member_data', None)
+
+        # Parse dates if provided
+        start_date = parse_datetime(start_date_str) if start_date_str else None
+        end_date = parse_datetime(end_date_str) if end_date_str else None
+
+        hh_report = None
+        loan_saving_report = None
+        group_report = None
+        # Get the 2D array reports from the three functions
+        if hh_data:
+            hh_report = get_location_level_hh_report(start_date=start_date, end_date=end_date, cluster=cluster)
+        if member_data:
+            loan_saving_report = get_location_level_loan_saving_report(start_date=start_date, end_date=end_date, cluster=cluster)
+        if shg_data:
+            group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster)
+
+        # Create a BytesIO buffer for the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Define a table style for all tables
+        table_style = TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 10),
+            ('BOTTOMPADDING', (0,0), (-1,0), 8),
+            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+            ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ])
+
+        # A helper function to add a section to the PDF
+        def add_section(title, data):
+            elements.append(Paragraph(title, styles['Heading2']))
+            elements.append(Spacer(1, 12))
+            table = Table(data)
+            table.setStyle(table_style)
+            elements.append(table)
+            elements.append(Spacer(1, 24))
+
+        # Add each report as a section
+        if  hh_report: add_section("Location Level Household Report", hh_report)
+        if loan_saving_report: add_section("Location Level Loan & Saving Report", loan_saving_report)
+        if group_report: add_section("Location Level Group Report", group_report)
+
+        # Build the PDF document
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        return HttpResponse(pdf, content_type='application/pdf')
