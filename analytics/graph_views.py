@@ -88,7 +88,7 @@ class LocationAnalyticsGraphsPDFView(APIView):
             bar1 = ax1.bar(x, total_groups, label="Total Groups", color="skyblue")
             # Plot total members on top of groups (stacked)
             bar2 = ax1.bar(x, total_members, bottom=total_groups, label="Total Members", color="orange")
-            ax1.set_title("Stacked Bar Graph: Groups & Members by Location")
+            ax1.set_title("Number of Groups & Members by Location")
             ax1.set_xticks(x)
             ax1.set_xticklabels(locations, rotation=45, ha="right")
             ax1.set_ylabel("Count")
@@ -105,7 +105,7 @@ class LocationAnalyticsGraphsPDFView(APIView):
             ax2.bar(x - width, total_savings, width, label="Total Savings", color="green")
             ax2.bar(x, total_capital, width, label="Total Capital", color="blue")
             ax2.bar(x + width, total_loan_circulated, width, label="Total Loan Circulated", color="red")
-            ax2.set_title("Grouped Bar Chart: Financial Metrics by Location")
+            ax2.set_title("Financial Metrics by Location")
             ax2.set_xticks(x)
             ax2.set_xticklabels(locations, rotation=45, ha="right")
             ax2.set_ylabel("Amount")
@@ -120,7 +120,7 @@ class LocationAnalyticsGraphsPDFView(APIView):
             x = np.arange(len(locations))
             ax3.plot(x, max_loan_taken, marker="o", linestyle="-", label="Max Loan Taken", color="purple")
             ax3.plot(x, total_loan_other_sources, marker="o", linestyle="-", label="Total Loan from Other Sources", color="brown")
-            ax3.set_title("Line Chart: Loan Metrics by Location")
+            ax3.set_title("Loan Metrics by Location")
             ax3.set_xticks(x)
             ax3.set_xticklabels(locations, rotation=45, ha="right")
             ax3.set_ylabel("Loan Amount")
@@ -128,6 +128,17 @@ class LocationAnalyticsGraphsPDFView(APIView):
             fig3.tight_layout()
             pdf.savefig(fig3)
             plt.close(fig3)
+
+            # # Apply header to all pages
+            # from reportlab.pdfgen import canvas
+            # from reportlab.lib.pagesizes import landscape, letter
+            # import os
+            # from django.conf import settings
+           
+            # c = canvas.Canvas(pdf._file, pagesize=landscape(letter))
+            # add_header(c, pdf)
+            # c.showPage()
+            # c.save()
 
         # Get PDF data from buffer
         pdf_data = buffer.getvalue()
