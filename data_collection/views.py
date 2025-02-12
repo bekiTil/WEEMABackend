@@ -10,7 +10,7 @@ class SixMonthDataViewSet(ModelViewSet):
     serializer_class = SixMonthDataSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = [ 'active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
+    filterset_fields = ['member', 'active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
     search_fields = ['member__first_name', 'member__last_name', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
     ordering_fields = ['created_at', 'updated_at','active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan', 'approx_monthly_personal_income']
 

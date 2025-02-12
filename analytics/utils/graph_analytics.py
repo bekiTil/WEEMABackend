@@ -106,7 +106,7 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
         )['total']
         if not total_monthly_savings: total_monthly_savings = 0
         # Convert monthly savings to weekly saving
-        weekly_saving = total_monthly_savings / 4.33
+        weekly_saving = total_monthly_savings 
         
         # Total Capital from SixMonthData: sum of iga_capital
         total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(
