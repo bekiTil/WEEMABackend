@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SixMonthData, AnnualData, AnnualChildrenStatus
+from .models import SixMonthData, AnnualData, AnnualChildrenStatus, AnnualSelfHelpGroupData
 
 class SixMonthDataSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,4 +14,9 @@ class AnnualDataSerializer(serializers.ModelSerializer):
 class AnnualChildrenStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnualChildrenStatus
+        fields = "__all__"
+
+class AnnualSelfHelpGroupDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnnualSelfHelpGroupData
         fields = "__all__"
