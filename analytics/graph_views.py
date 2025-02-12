@@ -30,12 +30,16 @@ class LocationAnalyticsGraphsPDFView(APIView):
         start_date_str = request.query_params.get("start_date", None)
         end_date_str = request.query_params.get("end_date", None)
         cluster = request.query_params.get("cluster", None)
+        json = request.query_params.get("json", None)
 
         start_date = parse_datetime(start_date_str) if start_date_str else None
         end_date = parse_datetime(end_date_str) if end_date_str else None
 
         # Get aggregated analytics per location
         analytics = get_location_level_graph_data(start_date=start_date, end_date=end_date, cluster=cluster)
+        
+        if json:
+            return Response(analytics, status = status.HTTP_200_OK)
 
         # Sort locations for consistent ordering
         locations = sorted(analytics.keys())
