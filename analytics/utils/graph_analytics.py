@@ -99,8 +99,8 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
         print(group.group_name)
         # Get all members in this group
         members = Member.objects.filter(group=group)
-        if not members.exists():
-            continue  # Skip groups with no members
+        # if not members.exists():
+        #     continue  # Skip groups with no members
         
         # Aggregate monthly savings from AnnualData for these members.
         total_monthly_savings = AnnualData.objects.filter(member__in=members, **filters).aggregate(

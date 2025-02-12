@@ -58,6 +58,28 @@ class LocationAnalyticsGraphsPDFView(APIView):
 
         # Create a PdfPages object to compile multiple pages into a single PDF
         with PdfPages(buffer) as pdf:
+            
+            # def add_header(canvas, doc):
+            #     canvas.saveState()
+                
+            #     # Logo
+            #     logo_path = os.path.join(settings.BASE_DIR, 'logo_real.png')
+            #     if os.path.exists(logo_path):
+            #         canvas.drawImage(logo_path, 40, 500, width=80, height=80, preserveAspectRatio=True)
+
+            #     # Company Name
+            #     canvas.setFont("Helvetica-Bold", 16)
+            #     canvas.drawCentredString(400, 560, "WEEMA")
+
+            #     # Report Title
+            #     canvas.setFont("Helvetica", 12)
+            #     canvas.drawCentredString(400, 540, "Self Help Group (SHG) Data Summary Report")
+
+            #     # Report Date
+            #     canvas.setFont("Helvetica", 10)
+            #     canvas.drawCentredString(400, 520, f"Date of Report: {datetime.now().strftime('%Y-%m-%d')}")
+
+            #     canvas.restoreState()
             # -------------------
             # Graph 1: Stacked Bar Graph (Groups and Members)
             fig1, ax1 = plt.subplots(figsize=(8, 6))
