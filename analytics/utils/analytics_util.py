@@ -1,6 +1,6 @@
 from django.db.models import Sum, Avg, Count, Max, Min, F, Q, DecimalField
 from cluster_management.models import SelfHelpGroup, Member
-from data_collection.models import AnnualData, SixMonthData, AnnualChildrenStatus
+from data_collection.models import AnnualData, SixMonthData, AnnualChildrenStatus, AnnualSelfHelpGroupData
 import csv
 from datetime import datetime
 
@@ -264,3 +264,119 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
         ])
 
     return csv_data
+
+
+def dump_all_data_report(start_date = None, end_date = None, cluster = None, facilitator = None):
+    
+    date_filter = Q()
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+            date_filter = Q(created_at__range=[start_date, end_date])
+        except Exception as e:
+            return {"error": str(e)}
+        
+    groups = SelfHelpGroup.objects.filter(cluster=cluster)
+    
+    if cluster:
+        groups = SelfHelpGroup.objects.filter(cluster=cluster)
+    elif facilitator:
+        groups = SelfHelpGroup.objects.filter(facilitator=facilitator)
+    else:
+        groups = SelfHelpGroup.objects.all()
+    
+    members = Member.objects.filter(group__in=groups)
+   
+    
+    
+    annual_member_data = AnnualData.objects.filter(member__in=members).filter(date_filter)
+    member_sixmonth_data = SixMonthData.objects.filter(member__in=members).filter(date_filter)
+    annual_childeren_status = AnnualChildrenStatus.objects.filter(member__in=members).filter(date_filter)
+    annual_group_status =AnnualSelfHelpGroupData.objects.filter(group__in=groups)
+    
+    print("Members count:", members.count())
+    print("Number of groups:", groups.count())
+    print("Number of annual member data entries:", annual_member_data.count())
+    print("Number of six month data entries:", member_sixmonth_data.count())
+    print("Number of annual children status entries:", annual_childeren_status.count())
+    print("Number of annual group status entries:", annual_group_status.count())
+    
+    # Prepare lists for each section
+    annual_data_list = [
+        ["member", "age", "gender", "education_level", "marital_status", "family_size", "household_size", 
+         "total_savings", "loan_rounds_taken", "estimated_value_of_household_assets", "household_decision_making",
+         "community_decision_making", "mortality_children_under_5", "mortality_other_household_members", 
+         "housing", "have_latrine", "electricity", "drinking_water"]
+    ]
+
+    for data in annual_member_data:
+        annual_data_list.append([data.member.first_name + " " + data.member.last_name, data.age, data.gender, data.education_level, 
+                                 data.marital_status, data.family_size, data.household_size, 
+                                 data.total_savings, data.loan_rounds_taken, 
+                                 data.estimated_value_of_household_assets, data.household_decision_making, 
+                                 data.community_decision_making, data.mortality_children_under_5, 
+                                 data.mortality_other_household_members, data.housing, 
+                                 data.have_latrine, data.electricity, data.drinking_water])
+
+    six_month_data_list = [
+        ["member", "active_iga", "iga_activity_code", "iga_capital", "loan_amount_received_shg", 
+         "loan_source_code", "loan_amount_from_other_sources", "purpose_of_loan", "approx_monthly_personal_income",
+         "approx_monthly_household_income", "meals_per_day_for_children", "meals_per_day_for_adults", 
+         "days_diarrhea_children", "days_other_illness_children", "days_diarrhea_others", "days_other_illness_others"]
+    ]
+
+    for data in member_sixmonth_data:
+        six_month_data_list.append([data.member.first_name + " " + data.member.last_name, data.active_iga, data.iga_activity_code, data.iga_capital, 
+                                    data.loan_amount_received_shg, data.loan_source_code, 
+                                    data.loan_amount_from_other_sources, data.purpose_of_loan, 
+                                    data.approx_monthly_personal_income, data.approx_monthly_household_income, 
+                                    data.meals_per_day_for_children, data.meals_per_day_for_adults, 
+                                    data.days_diarrhea_children, data.days_other_illness_children, 
+                                    data.days_diarrhea_others, data.days_other_illness_others])
+
+    children_status_list = [
+        ["member", "number_of_children", "child_1_name", "child_1_gender", "child_1_age", "child_1_school_status",
+         "child_2_name", "child_2_gender", "child_2_age", "child_2_school_status", "child_3_name", 
+         "child_3_gender", "child_3_age", "child_3_school_status", "child_4_name", "child_4_gender", 
+         "child_4_age", "child_4_school_status", "child_5_name", "child_5_gender", "child_5_age", "child_5_school_status"]
+    ]
+
+    for status in annual_childeren_status:
+        children_status_list.append([data.member.first_name + " " + data.member.last_name, status.number_of_children, status.child_1_name, 
+                                     status.child_1_gender, status.child_1_age, status.child_1_school_status,
+                                     status.child_2_name, status.child_2_gender, status.child_2_age, 
+                                     status.child_2_school_status, status.child_3_name, status.child_3_gender, 
+                                     status.child_3_age, status.child_3_school_status, status.child_4_name, 
+                                     status.child_4_gender, status.child_4_age, status.child_4_school_status, 
+                                     status.child_5_name, status.child_5_gender, status.child_5_age, 
+                                     status.child_5_school_status])
+
+    group_status_list = [
+        ["group", "amount_regular_saving", "shg_capital", "num_members_taken_loan", "smallest_loan_given", 
+         "largest_loan_given", "amount_loans_written_off", "amount_invested_in_group_iga", "group_iga_code1", 
+         "description", "income_social_savings", "expenditure_social_savings", "num_shg_members_social_support", 
+         "num_people_outside_shg_social_support", "num_other_supporting_institutions", "min_monthly_personal", 
+         "training_received_per_year", "shg_member_health_care_support_amount", "other_member_health_care_support_amount", 
+         "other_insurance_need_amount", "other_social_need_amount", "others"]
+    ]
+
+    for status in annual_group_status:
+        group_status_list.append([status.group.group_name, status.amount_regular_saving, status.shg_capital, 
+                                  status.num_members_taken_loan, status.smallest_loan_given, 
+                                  status.largest_loan_given, status.amount_loans_written_off, 
+                                  status.amount_invested_in_group_iga, status.group_iga_code1, 
+                                  status.description, status.income_social_savings, status.expenditure_social_savings, 
+                                  status.num_shg_members_social_support, status.num_people_outside_shg_social_support, 
+                                  status.num_other_supporting_institutions, status.min_monthly_personal, 
+                                  status.training_received_per_year, status.shg_member_health_care_support_amount, 
+                                  status.other_member_health_care_support_amount, status.other_insurance_need_amount, 
+                                  status.other_social_need_amount, status.others])
+
+    # Return the data as a dictionary with corresponding lists
+    return {
+        "annual_data": annual_data_list,
+        "six_month_data": six_month_data_list,
+        "children_status": children_status_list,
+        "group_status": group_status_list
+    } 

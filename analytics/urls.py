@@ -9,7 +9,7 @@ from .views import (
     FacilitatorAnalyticsView,
     LocationLevelAnalyticsPDFView
 )
-from .graph_views import LocationAnalyticsGraphsPDFView, GroupLevelFinancialMetricsAPIView
+from .graph_views import LocationAnalyticsGraphsPDFView, GroupLevelFinancialMetricsAPIView, DumpAllDataView
 
 urlpatterns = [
     path('reports/system/', SystemLevelReportView.as_view(), name='system-level-report'),
@@ -24,4 +24,5 @@ urlpatterns = [
     path('reports/pdf/table/', LocationLevelAnalyticsPDFView.as_view(), name="pdf_table_report"),
     path('reports/pdf/graph/highlevel', LocationAnalyticsGraphsPDFView.as_view(), name="pdf_graph_heigh_level_report"),
     path('reports/pdf/graph/quality-control', GroupLevelFinancialMetricsAPIView.as_view(), name="pdf_graph_quality_control_report"),
+    path('reports/dump-all-data', DumpAllDataView.as_view(), name="dump_all_data"),
 ]

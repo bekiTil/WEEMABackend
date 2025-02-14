@@ -1,7 +1,6 @@
 from django.db import models
 from cluster_management.models import Member, SelfHelpGroup
 from WEEMA.models import BaseModel
-
 class SixMonthData(BaseModel):
     # Choices for IGA Activities
     IGA_CHOICES = [

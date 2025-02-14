@@ -13,7 +13,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .utils.graph_analytics import get_location_level_graph_data, get_group_level_financial_metrics
+from .utils.analytics_util import dump_all_data_report
 from cluster_management.models import Cluster
+import csv
+import zipfile
+from io import BytesIO, StringIO
 
 
 class LocationAnalyticsGraphsPDFView(APIView):
@@ -174,3 +178,60 @@ class GroupLevelFinancialMetricsAPIView(APIView):
         )
         
         return Response(analytics_result, status=status.HTTP_200_OK)
+
+
+class DumpAllDataView(APIView):
+    def get(self, request, *args, **kwargs):
+        start_date_str = request.query_params.get('start_date', None)
+        end_date_str = request.query_params.get('end_date', None)
+        cluster = request.query_params.get('cluster', None)
+        facilitator = request.query_params.get('facilitator', None)
+        
+        # Extract data using your function (which returns dict of 2D arrays)
+        data = dump_all_data_report(start_date=start_date_str, end_date=end_date_str, cluster=cluster, facilitator=facilitator)
+
+        # Create a BytesIO stream to hold the ZIP file
+        zip_buffer = BytesIO()
+
+        # Create a ZIP file in memory
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Prepare the 'annual_data' CSV file
+            annual_csv_file = StringIO()
+            writer = csv.writer(annual_csv_file)
+            for row in data["annual_data"]:
+                writer.writerow(row)
+            # Encode to bytes and write to ZIP
+            annual_bytes = annual_csv_file.getvalue().encode('utf-8')
+            zip_file.writestr("annual_data.csv", annual_bytes)
+
+            # Prepare the 'six_month_data' CSV file
+            six_month_csv_file = StringIO()
+            writer = csv.writer(six_month_csv_file)
+            for row in data["six_month_data"]:
+                writer.writerow(row)
+            six_month_bytes = six_month_csv_file.getvalue().encode('utf-8')
+            zip_file.writestr("six_month_data.csv", six_month_bytes)
+
+            # Prepare the 'children_status' CSV file
+            children_status_csv_file = StringIO()
+            writer = csv.writer(children_status_csv_file)
+            for row in data["children_status"]:
+                writer.writerow(row)
+            children_status_bytes = children_status_csv_file.getvalue().encode('utf-8')
+            zip_file.writestr("children_status.csv", children_status_bytes)
+
+            # Prepare the 'group_status' CSV file
+            group_status_csv_file = StringIO()
+            writer = csv.writer(group_status_csv_file)
+            for row in data["group_status"]:
+                writer.writerow(row)
+            group_status_bytes = group_status_csv_file.getvalue().encode('utf-8')
+            zip_file.writestr("group_status.csv", group_status_bytes)
+
+        # Ensure the buffer is at the beginning
+        zip_buffer.seek(0)
+
+        # Send the ZIP file as the response
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="data.zip"'
+        return response

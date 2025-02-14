@@ -651,9 +651,9 @@ class LocationLevelAnalyticsPDFView(APIView):
         start_date_str = request.query_params.get('start_date', None)
         end_date_str = request.query_params.get('end_date', None)
         cluster = request.query_params.get('cluster', None)  # This might be an ID or a string
-        hh_data = request.query_params.get('hh_data', "Hello")
-        shg_data = request.query_params.get('shg_data', "None")
-        member_data = request.query_params.get('member_data', "None")
+        hh_data = request.query_params.get('hh_data', None)
+        shg_data = request.query_params.get('shg_data', None)
+        member_data = request.query_params.get('member_data', None)
 
         # Parse dates if provided
         start_date = parse_datetime(start_date_str) if start_date_str else None
