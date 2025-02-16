@@ -1,6 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
-from .models import SixMonthData, AnnualData, AnnualChildrenStatus
-from .serializers import SixMonthDataSerializer, AnnualDataSerializer, AnnualChildrenStatusSerializer
+from .models import SixMonthData, AnnualData, AnnualChildrenStatus, AnnualSelfHelpGroupData
+from .serializers import SixMonthDataSerializer, AnnualDataSerializer, AnnualChildrenStatusSerializer, AnnualSelfHelpGroupDataSerializer
 from .pagination import CustomPageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -10,7 +10,7 @@ class SixMonthDataViewSet(ModelViewSet):
     serializer_class = SixMonthDataSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = [ 'active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
+    filterset_fields = ['member', 'active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
     search_fields = ['member__first_name', 'member__last_name', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan']
     ordering_fields = ['created_at', 'updated_at','active_iga', 'iga_activity_code', 'loan_source_code', 'purpose_of_loan', 'approx_monthly_personal_income']
 
@@ -34,3 +34,13 @@ class AnnualChildrenStatusViewSet(ModelViewSet):
     filterset_fields = ['number_of_children']
     search_fields = ['member__first_name', 'member__last_name']
     ordering_fields = ['number_of_children', 'created_at', 'updated_at' ]
+
+
+class AnnualSelfHelpGroupDataViewSet(ModelViewSet):
+    queryset = AnnualSelfHelpGroupData.objects.all()
+    serializer_class = AnnualSelfHelpGroupDataSerializer
+    pagination_class = CustomPageNumberPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['group_iga_code1','group', 'shg_capital', 'largest_loan_given','expenditure_social_savings' ]
+    search_fields = ['group_iga_code1','group', 'shg_capital', 'largest_loan_given' ]
+    ordering_fields = ['created_at', 'updated_at' ]

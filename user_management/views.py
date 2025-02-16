@@ -48,7 +48,7 @@ class WEEMAEntitiesViewSet(ModelViewSet):
     serializer_class = WEEMAEntitiesSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['gender', 'cluster_id', 'group_id', 'verified', 'user__user_type']
+    filterset_fields = ['gender', 'verified', 'user__user_type']
     search_fields = ['phone_number', 'address', 'national_id']
     ordering_fields = ['date_of_birth', 'last_login', 'verification_date']
     
@@ -77,8 +77,6 @@ class WEEMAEntitiesViewSet(ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()  
-
-        url_name = resolve(request.path_info).url_name 
         
         return self.update_profile(
             request=request,

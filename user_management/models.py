@@ -38,8 +38,6 @@ class WEEMAEntities(BaseModel):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')], blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    cluster_id = models.PositiveIntegerField(blank=True, null=True)
-    group_id = models.PositiveIntegerField(blank=True, null=True)
     national_id = models.CharField(max_length=20, blank=True, null=True)
     profile_picture = models.URLField(null=True)
     last_login = models.DateTimeField(auto_now=True)

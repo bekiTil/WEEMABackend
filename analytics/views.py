@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Sum, Avg, Max, Min, F, Q
 from data_collection.models import SixMonthData, AnnualData, AnnualChildrenStatus
+from user_management.models import WEEMAEntities
 from cluster_management.models import SelfHelpGroup, Cluster, Member
 from user_management.models import CustomUser
 from django.utils.dateparse import parse_datetime
@@ -13,6 +14,18 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import csv
 from django.http import HttpResponse
+# ReportLab imports
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+from io import BytesIO
+from datetime import datetime
+
+from .utils.analytics_util import get_location_level_group_report, get_location_level_loan_saving_report, get_location_level_hh_report  
+import os
+from django.conf import settings
 
 class SystemLevelReportView(APIView):
     """
@@ -138,21 +151,37 @@ class SelfHelpGroupLevelReportView(APIView):
         total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
         total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
-
-        csv_data = [
-            ['Group Name', 'Total Members', 'Total Household Size', 'Total Savings', 'Total Capital', 'Total Loan Circulated', 'Average IGA Capital'],
-            [group.group_name, total_members, total_household_size, total_savings, total_capital, total_loan_circulated, average_iga_capital],
-        ]
-
-        # Create the CSV response
-        csv_response = HttpResponse(content_type='text/csv')
-        csv_response['Content-Disposition'] = f'attachment; filename="{group.group_name}_report.csv"'
         
-        writer = csv.writer(csv_response)
-        writer.writerows(csv_data)
-
-        return csv_response
+        # Prepare data response
+        json_report_data = {
+            "group_name": group.group_name,
+            "total_members": total_members,
+            "total_household_size": total_household_size,
+            "total_savings": total_savings,
+            "total_capital": total_capital,
+            "total_loan_circulated": total_loan_circulated,
+            "average_iga_capital": average_iga_capital,
+        }
         
+        response_format = request.query_params.get('format', 'json')
+
+        if response_format == 'csv':
+            csv_data = [
+                ['Group Name', 'Total Members', 'Total Household Size', 'Total Savings', 'Total Capital', 'Total Loan Circulated', 'Average IGA Capital'],
+                [group.group_name, total_members, total_household_size, total_savings, total_capital, total_loan_circulated, average_iga_capital],
+            ]
+
+            # Create the CSV response
+            csv_response = HttpResponse(content_type='text/csv')
+            csv_response['Content-Disposition'] = f'attachment; filename="{group.group_name}_report.csv"'
+            
+            writer = csv.writer(csv_response)
+            writer.writerows(csv_data)
+
+            return csv_response
+        
+        return Response(json_report_data, status=status.HTTP_200_OK)
+            
         
 class DashboardMetricsView(APIView):
     """
@@ -205,9 +234,9 @@ class DashboardMetricsView(APIView):
                 return Response({"error": "Cluster ID is required for cluster managers."}, status=status.HTTP_400_BAD_REQUEST)
 
             data = {
-                "total_groups": SelfHelpGroup.objects.filter(cluster_id=cluster_id).count(),
-                "total_members": Member.objects.filter(group__cluster_id=cluster_id).count(),
-                "total_savings": AnnualData.objects.filter(member__group__cluster_id=cluster_id).aggregate(
+                "total_groups": SelfHelpGroup.objects.filter(cluster=cluster_id).count(),
+                "total_members": Member.objects.filter(group__cluster=cluster_id).count(),
+                "total_savings": AnnualData.objects.filter(member__group__cluster=cluster_id).aggregate(
                     total_savings=Sum('total_savings')
                 )['total_savings'],
                 "member_growth": self.get_member_growth_graph(
@@ -247,8 +276,8 @@ class DashboardMetricsView(APIView):
         filters = {}
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
-        if cluster_id:
-            filters['cluster_id'] = cluster_id  # Assuming users are linked to clusters
+        # if cluster_id:
+        #     filters['cluster'] = cluster_id  # Assuming users are linked to clusters
 
         # Group by month and user type, then count new users
         growth_data = (
@@ -277,7 +306,7 @@ class DashboardMetricsView(APIView):
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
         if cluster_id:
-            filters['group__cluster_id'] = cluster_id
+            filters['group__cluster'] = cluster_id
         if group_id:
             filters['group_id'] = group_id
 
@@ -309,9 +338,9 @@ class DashboardMetricsView(APIView):
         if start_date and end_date:
             filters['created_at__range'] = [start_date, end_date]
         if cluster_id:
-            filters['group__cluster_id'] = cluster_id
+            filters['group__cluster'] = cluster_id
         if group_id:
-            filters['group_id'] = group_id
+            filters['group'] = group_id
 
         # Group by month and count new members
         growth_data = (
@@ -553,3 +582,185 @@ class MemberDataReportView(APIView):
             ])
 
         return response
+
+
+
+class FacilitatorAnalyticsView(APIView):
+    """
+    Cluster-level report, aggregated for a given cluster.
+    """
+    def get(self, request, facilitator_id):
+        
+        try:
+            weema_entity = WEEMAEntities.objects.select_related("user").get(id=facilitator_id)
+        except WEEMAEntities.DoesNotExist:
+            return Response({"error": "Facilitator not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if weema_entity== None or weema_entity.user.user_type != "facilitator":
+            return Response({"error": "User is not a facilitator"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Parsing date range parameters
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+
+        if start_date:
+            start_date = parse_datetime(start_date)
+        if end_date:
+            end_date = parse_datetime(end_date)
+
+
+        # Get all groups and members in the cluster
+        groups = SelfHelpGroup.objects.filter(facilitator_id=facilitator_id)
+        members = Member.objects.filter(group__in=groups)
+
+        # Filtering data based on the time range
+        filters = {}
+        if start_date and end_date:
+            filters['created_at__range'] = [start_date, end_date]
+
+        # Aggregating data
+        total_shgs = groups.count()
+        total_members = members.count()
+        total_household_size = members.aggregate(total=Sum('hh_size'))['total']
+        total_savings = AnnualData.objects.filter(member__in=members, **filters).aggregate(total=Sum('total_savings'))['total']
+        total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
+        total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
+        average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
+
+        return Response({
+            'facilitator': weema_entity.user.first_name + " " + weema_entity.user.last_name, 
+            'total_shgs': total_shgs,
+            'total_members': total_members,
+            'total_household_size': total_household_size,
+            'total_savings': total_savings,
+            'total_capital': total_capital,
+            'total_loan_circulated': total_loan_circulated,
+            'average_iga_capital': average_iga_capital,
+        }, status=status.HTTP_200_OK)
+
+
+class LocationLevelAnalyticsPDFView(APIView):
+    """
+    API View that compiles three location-level analytics reports (household, loan-saving, and group)
+    into one PDF file with styled tables. The header row is bold and has a background color.
+    Accepts optional query parameters: start_date, end_date, and cluster.
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Parse optional query parameters
+        start_date_str = request.query_params.get('start_date', None)
+        end_date_str = request.query_params.get('end_date', None)
+        cluster = request.query_params.get('cluster', None)  # This might be an ID or a string
+        hh_data = request.query_params.get('hh_data', None)
+        shg_data = request.query_params.get('shg_data', None)
+        member_data = request.query_params.get('member_data', None)
+
+        # Parse dates if provided
+        start_date = parse_datetime(start_date_str) if start_date_str else None
+        end_date = parse_datetime(end_date_str) if end_date_str else None
+
+        hh_report = None
+        loan_saving_report = None
+        group_report = None
+        # Get the 2D array reports from the three functions
+        if hh_data:
+            hh_report = get_location_level_hh_report(start_date=start_date, end_date=end_date, cluster=cluster)
+        if member_data:
+            loan_saving_report = get_location_level_loan_saving_report(start_date=start_date, end_date=end_date, cluster=cluster)
+        if shg_data:
+            group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster)
+
+        # Create a BytesIO buffer for the PDF
+        # Create a buffer for PDF output
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), leftMargin=40, rightMargin=40, topMargin=0, bottomMargin=30)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Define a centered title style
+        title_style = ParagraphStyle(
+            'CenteredTitle',
+            parent=styles['Heading2'],
+            alignment=1,  # Centered
+            spaceAfter=6  # Reduce space after the title
+        )
+
+        # Define an improved table style
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#B6D7A8")),  # Light green header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),  # Reduced font size for better fit
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
+        ])
+
+        # ======= Add HEADER with Logo, Company Name, Title & Date =======
+        logo_left_path = os.path.join(settings.BASE_DIR, 'logo_real.png')  # Change to your actual logo path
+        logo_right_path = logo_left_path  # Change to your actual logo path
+
+        # Load logos
+        logo_left = Image(logo_left_path, width=110, height=110)
+
+        # Company Name & Report Details
+        company_name = Paragraph("<b>WEEMA</b>", styles["Title"])
+        report_title = Paragraph("<b>Self Help Group (SHG) Data Summary Report</b>", styles["Heading2"])
+        report_date = Paragraph(f"Date of Report: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"])
+
+        # Create Header Table
+        header_data = [
+            [logo_left],  # Row 1: Logos & Company Name
+            [report_title],  # Row 2: Report Title
+            [report_date]  # Row 3: Report Date
+        ]
+
+        header_table = Table(header_data, colWidths=[800])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#B6D7A8")),  # Light green background
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),  # Reduced font size for better fit
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F5F5F5")]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
+        ]))
+
+        # Add header table to the document
+        elements.append(header_table)
+        elements.append(Spacer(1, 12))  # Add some space after the header
+
+        # ======= Add Reports =======
+        def add_section(title, data):
+            if not data:
+                return
+            elements.append(Paragraph(title, title_style))
+            elements.append(Spacer(1, 6))
+            table = Table(data)
+            table.setStyle(table_style)
+            elements.append(table)
+            elements.append(Spacer(1, 12))# Add each report as a section
+        if  hh_report: add_section("Member Household Report", hh_report)
+        if loan_saving_report: add_section("Member Loan & Saving Report", loan_saving_report)
+        if group_report: add_section("SHG Data Report", group_report)
+
+        # Build the PDF document
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        return HttpResponse(pdf, content_type='application/pdf')

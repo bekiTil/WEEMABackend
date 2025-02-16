@@ -119,7 +119,7 @@ DATABASES = {
         # Replace this value with your local database's connection string.
         default=env('DB_HOST'),
         conn_max_age=600
-    )
+    )   
 }
 
 cloudinary.config(

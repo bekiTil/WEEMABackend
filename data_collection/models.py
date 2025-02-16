@@ -1,7 +1,6 @@
 from django.db import models
-from cluster_management.models import Member
+from cluster_management.models import Member, SelfHelpGroup
 from WEEMA.models import BaseModel
-
 class SixMonthData(BaseModel):
     # Choices for IGA Activities
     IGA_CHOICES = [
@@ -187,3 +186,32 @@ class AnnualChildrenStatus(BaseModel):
 
     def __str__(self):
         return f"Household with {self.number_of_children} children"
+
+
+
+class AnnualSelfHelpGroupData(BaseModel):
+    group = models.ForeignKey(SelfHelpGroup, on_delete=models.CASCADE, related_name="annualGroupData")
+    amount_regular_saving = models.DecimalField(max_digits=10, decimal_places=2)
+    shg_capital = models.DecimalField(max_digits=10, decimal_places=2)
+    num_members_taken_loan = models.PositiveIntegerField()
+    smallest_loan_given = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    largest_loan_given = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    amount_loans_written_off = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount_invested_in_group_iga = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    group_iga_code1 = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    income_social_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    expenditure_social_savings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    num_shg_members_social_support = models.PositiveIntegerField(default=0)
+    num_people_outside_shg_social_support = models.PositiveIntegerField(default=0)
+    num_other_supporting_institutions = models.PositiveIntegerField(default=0)
+    min_monthly_personal = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    training_received_per_year = models.PositiveIntegerField(default=0) 
+    shg_member_health_care_support_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    other_member_health_care_support_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    other_insurance_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    other_social_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    others = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
