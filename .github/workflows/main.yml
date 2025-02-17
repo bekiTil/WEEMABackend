@@ -61,12 +61,6 @@ jobs:
             # Login to Docker Hub with Token
             echo "🔑 Logging in to Docker Hub..."
             echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-            # Start PostgreSQL container if not running
-            if ! docker ps | grep -q postgres-db; then
-                echo "Starting PostgreSQL container..."
-                sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
-            fi
               
             sudo docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_DATABASE }}'" | grep -q 1 || sudo docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -c "CREATE DATABASE ${{ secrets.DB_DATABASE }}"
             # Deploy application
