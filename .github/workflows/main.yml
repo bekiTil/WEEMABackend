@@ -63,24 +63,19 @@ jobs:
             echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
             # Start PostgreSQL container if not running
-            if ! sudo docker ps | grep -q postgres-db; then
-              echo "🚀 Starting PostgreSQL container..."
-              sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
+            if ! docker ps | grep -q postgres-db; then
+                echo "Starting PostgreSQL container..."
+                docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
             fi
-
-            # Ensure PostgreSQL user exists
-            echo "🔹 Ensuring PostgreSQL role exists..."
-            sudo docker exec -i postgres-db psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname='${{ secrets.DB_USERNAME }}'" | grep -q 1 || \
-            sudo docker exec -i postgres-db psql -U postgres -c "CREATE ROLE \"${{ secrets.DB_USERNAME }}\" WITH LOGIN PASSWORD '${{ secrets.DB_PASSWORD }}';" || true
-
-
-            # Ensure database exists
-            echo "🔹 Ensuring database exists..."
-            sudo docker exec -i postgres-db psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_NAME }}'" | grep -q 1 || sudo docker exec -i postgres-db psql -U postgres -c "CREATE DATABASE \"${{ secrets.DB_NAME }}\" OWNER \"${{ secrets.DB_USERNAME }}\";"
-
-            # Remove old application container if it exists
-            echo "🛑 Removing old application container..."
-            sudo docker rm -f weemaBackend || true
+              
+            docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_DATABASE }}'" | grep -q 1 || docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -c "CREATE DATABASE ${{ secrets.DB_DATABASE }}"
+            # Deploy application
+            if [ "$(docker ps -aq -f name=weemaBackend)" ]; then
+              echo "Removing existing container..."
+              docker rm -f weemaBackend
+            else
+              echo "No existing container found. Proceeding..."
+            fi
             
             # Pull latest Docker image
             echo "🐳 Pulling latest Docker Image: $DOCKER_IMAGE:latest"
