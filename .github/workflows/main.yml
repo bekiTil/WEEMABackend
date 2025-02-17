@@ -84,7 +84,7 @@ jobs:
             # Run new container
             echo "🚀 Running new Docker container..."
             sudo docker run -d \
-              -p 3000:${{ secrets.PORT }} \
+              -p 3001:${{ secrets.PORT }} \
               --name weemaBackend \
               --link postgres-db:db \
               -e DB_NAME=${{ secrets.DB_NAME }} \
