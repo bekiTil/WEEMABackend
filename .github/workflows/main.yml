@@ -51,7 +51,7 @@ jobs:
 
       - name: SSH and Deploy on EC2
         run: |
-         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -T -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
             echo "🚀 Connecting to EC2 instance..."
             
             # Ensure Docker is running
@@ -67,8 +67,6 @@ jobs:
               echo "🚀 Starting PostgreSQL container..."
               sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
             fi
-
-    
 
             # Ensure PostgreSQL user exists
             echo "🔹 Ensuring PostgreSQL role exists..."
