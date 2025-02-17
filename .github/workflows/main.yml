@@ -51,7 +51,7 @@ jobs:
 
       - name: SSH and Deploy on EC2
         run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
             echo "🚀 Connecting to EC2 instance..."
             
             # Ensure Docker is running
@@ -68,22 +68,31 @@ jobs:
               sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
             fi
 
+            # Wait for PostgreSQL to initialize
+            echo "⏳ Waiting for PostgreSQL to start..."
+            sleep 10
+
+            # Ensure PostgreSQL user exists
+            echo "🔹 Ensuring PostgreSQL role exists..."
+            sudo docker exec -i postgres-db psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname='${{ secrets.DB_USERNAME }}'" | grep -q 1 || sudo docker exec -i postgres-db psql -U postgres -c "CREATE ROLE \"${{ secrets.DB_USERNAME }}\" WITH LOGIN PASSWORD '${{ secrets.DB_PASSWORD }}';"
+
             # Ensure database exists
-            sudo docker exec -i postgres-db psql -U ${{ secrets.DB_USERNAME }} -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_NAME }}'" | grep -q 1 || sudo docker exec -i postgres-db psql -U ${{ secrets.DB_USERNAME }} -c "CREATE DATABASE ${{ secrets.DB_NAME }}"
+            echo "🔹 Ensuring database exists..."
+            sudo docker exec -i postgres-db psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_NAME }}'" | grep -q 1 || sudo docker exec -i postgres-db psql -U postgres -c "CREATE DATABASE \"${{ secrets.DB_NAME }}\" OWNER \"${{ secrets.DB_USERNAME }}\";"
 
             # Remove old application container if it exists
             echo "🛑 Removing old application container..."
-            sudo docker rm -f weema || true
+            sudo docker rm -f weemaBackend || true
             
             # Pull latest Docker image
             echo "🐳 Pulling latest Docker Image: $DOCKER_IMAGE:latest"
-            sudo docker pull $DOCKER_IMAGE:latest
+            sudo docker pull docker.io/${{ secrets.DOCKER_USERNAME }}/weematest:latest
 
             # Run new container
             echo "🚀 Running new Docker container..."
             sudo docker run -d \
               -p 3000:${{ secrets.PORT }} \
-              --name weema \
+              --name weemaBackend \
               --link postgres-db:db \
               -e DB_NAME=${{ secrets.DB_NAME }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
