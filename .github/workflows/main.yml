@@ -3,7 +3,7 @@ name: CI/CD for Weema
 on:
   push:
     branches:
-      - main
+      - render
 
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
