@@ -65,14 +65,14 @@ jobs:
             # Start PostgreSQL container if not running
             if ! docker ps | grep -q postgres-db; then
                 echo "Starting PostgreSQL container..."
-                docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
+                sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
             fi
               
-            docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_DATABASE }}'" | grep -q 1 || docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -c "CREATE DATABASE ${{ secrets.DB_DATABASE }}"
+            sudo docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -tc "SELECT 1 FROM pg_database WHERE datname='${{ secrets.DB_DATABASE }}'" | grep -q 1 || sudo docker exec -it postgres-db psql -U ${{ secrets.DB_USERNAME }} -c "CREATE DATABASE ${{ secrets.DB_DATABASE }}"
             # Deploy application
             if [ "$(docker ps -aq -f name=weemaBackend)" ]; then
               echo "Removing existing container..."
-              docker rm -f weemaBackend
+              sudo docker rm -f weemaBackend
             else
               echo "No existing container found. Proceeding..."
             fi
