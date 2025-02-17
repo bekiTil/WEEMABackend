@@ -68,9 +68,7 @@ jobs:
               sudo docker run --name postgres-db -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} -p 5432:5432 -d postgres
             fi
 
-            # Wait for PostgreSQL to initialize
-            echo "⏳ Waiting for PostgreSQL to start..."
-            sleep 10
+    
 
             # Ensure PostgreSQL user exists
             echo "🔹 Ensuring PostgreSQL role exists..."
