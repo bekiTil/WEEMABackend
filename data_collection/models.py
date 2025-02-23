@@ -47,6 +47,7 @@ class SixMonthData(BaseModel):
     days_other_illness_children = models.IntegerField()
     days_diarrhea_others = models.IntegerField()
     days_other_illness_others = models.IntegerField()
+    number_of_weekly_meeting_missed = models.IntegerField(default = 0)
 
 class AnnualData(BaseModel):
     # Choices for Marital Status
@@ -109,12 +110,20 @@ class AnnualData(BaseModel):
         ('Male', 'Male'),
         ('Female', 'Female'),
     ]
+    
+    EDUCATION_LEVEL_CHOICES = [
+        ("No literacy","No literacy"),
+        ("No formal education but read and write", "No formal education but read and write"),
+        ("Completed primary school","Completed primary school"),
+        ("Completed secondary school", "Completed secondary school"),
+        ("Completed teritiary education" , "Completed teritiary education"),
+    ]
 
     # Model Fields
     member  = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="annual_data_members")
     age = models.IntegerField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    education_level = models.CharField(max_length=100)
+    education_level = models.CharField(max_length=100, choices=EDUCATION_LEVEL_CHOICES)
     marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES)
     family_size = models.IntegerField()
     household_size = models.IntegerField()
@@ -190,6 +199,18 @@ class AnnualChildrenStatus(BaseModel):
 
 
 class AnnualSelfHelpGroupData(BaseModel):
+    
+    # Choices for Training Received
+    TRAINING_RECEIVED_CHOICES = [
+        ("shg_concept", "SHG Concept"),
+        ("saving_and_credit", "Saving and Credit"),
+        ("record_keeping", "Record Keeping"),
+        ("facilitation_skill", "Facilitation Skill"),
+        ("leadership", "Leadership"),
+        ("self_assessment", "Self-Assessment"),
+        ("cla_fla_concept", "CLA & FLA Concept"),
+    ]
+    
     group = models.ForeignKey(SelfHelpGroup, on_delete=models.CASCADE, related_name="annualGroupData")
     amount_regular_saving = models.DecimalField(max_digits=10, decimal_places=2)
     shg_capital = models.DecimalField(max_digits=10, decimal_places=2)
@@ -212,6 +233,7 @@ class AnnualSelfHelpGroupData(BaseModel):
     other_insurance_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     other_social_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     others = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    training_received_in_year = models.CharField(max_length=100, choices=TRAINING_RECEIVED_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name

@@ -358,7 +358,7 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
          "description", "income_social_savings", "expenditure_social_savings", "num_shg_members_social_support", 
          "num_people_outside_shg_social_support", "num_other_supporting_institutions", "min_monthly_personal", 
          "training_received_per_year", "shg_member_health_care_support_amount", "other_member_health_care_support_amount", 
-         "other_insurance_need_amount", "other_social_need_amount", "others"]
+         "other_insurance_need_amount", "other_social_need_amount", "others", "training_received_in_year"]
     ]
 
     for status in annual_group_status:
@@ -371,7 +371,7 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
                                   status.num_other_supporting_institutions, status.min_monthly_personal, 
                                   status.training_received_per_year, status.shg_member_health_care_support_amount, 
                                   status.other_member_health_care_support_amount, status.other_insurance_need_amount, 
-                                  status.other_social_need_amount, status.others])
+                                  status.other_social_need_amount, status.others, status.training_received_in_year])
 
     # Return the data as a dictionary with corresponding lists
     return {
