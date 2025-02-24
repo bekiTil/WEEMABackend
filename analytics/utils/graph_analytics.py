@@ -76,7 +76,7 @@ def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
 
 
 
-def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=None):
+def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=None, group_age=None):
     # Build date filters if provided
     filters = {}
     if start_date and end_date:
@@ -89,6 +89,14 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
     groups_qs = SelfHelpGroup.objects.all()
     if cluster:
         groups_qs = groups_qs.filter(cluster=cluster)
+    
+    if group_age is not None:
+        # Get the approximate date range for the given age
+        today = now().date()
+        min_date = today - relativedelta(years=group_age + 1) + timedelta(days=1)  # Just past the previous year
+        max_date = today - relativedelta(years=group_age)  # Up to the exact year
+        
+        groups_qs = groups_qs.filter(created_at__range=(min_date, max_date))
     
     
     

@@ -160,6 +160,7 @@ class GroupLevelFinancialMetricsAPIView(APIView):
         end_date_str = request.query_params.get('end_date', None)
         start_date = parse_datetime(start_date_str) if start_date_str else None
         end_date = parse_datetime(end_date_str) if end_date_str else None
+        group_age = request.query_params.get('group_age', None)
 
         # Get the cluster parameter (if provided) and convert to a Cluster instance
         cluster_id = request.query_params.get('cluster', None)
@@ -174,7 +175,8 @@ class GroupLevelFinancialMetricsAPIView(APIView):
         analytics_result = get_group_level_financial_metrics(
             start_date=start_date_str,   
             end_date=end_date_str,
-            cluster=cluster_obj          
+            cluster=cluster_obj ,
+            group_age = group_age         
         )
         
         return Response(analytics_result, status=status.HTTP_200_OK)
