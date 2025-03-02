@@ -6,6 +6,7 @@ from django.utils.dateparse import parse_datetime
 from django.db.models.functions import Cast
 from django.utils.timezone import now
 from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 
 def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
     
