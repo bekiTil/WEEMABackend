@@ -4,6 +4,9 @@ from cluster_management.models import SelfHelpGroup, Member
 from data_collection.models import AnnualData, SixMonthData, AnnualSelfHelpGroupData, AnnualSelfHelpGroupData
 from django.utils.dateparse import parse_datetime
 from django.db.models.functions import Cast
+from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 
 def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
     
@@ -92,6 +95,7 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
     
     if group_age is not None:
         # Get the approximate date range for the given age
+        group_age = int(group_age)
         today = now().date()
         min_date = today - relativedelta(years=group_age + 1) + timedelta(days=1)  # Just past the previous year
         max_date = today - relativedelta(years=group_age)  # Up to the exact year
