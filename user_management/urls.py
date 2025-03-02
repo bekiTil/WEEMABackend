@@ -8,7 +8,7 @@ from .views import (
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
-# router.register(r'users', CustomUserViewSet, basename='user')
+router.register(r'users', CustomUserViewSet, basename='user')
 router.register(r'weema-entities', WEEMAEntitiesViewSet, basename='weema-entities')
 
 # The API URLs are now determined automatically by the router.
