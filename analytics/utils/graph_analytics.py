@@ -94,6 +94,7 @@ def get_group_level_financial_metrics(start_date=None, end_date=None, cluster=No
     
     if group_age is not None:
         # Get the approximate date range for the given age
+        group_age = int(group_age)
         today = now().date()
         min_date = today - relativedelta(years=group_age + 1) + timedelta(days=1)  # Just past the previous year
         max_date = today - relativedelta(years=group_age)  # Up to the exact year
