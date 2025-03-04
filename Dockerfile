@@ -26,7 +26,7 @@ COPY . .
 COPY ./entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 3001
 
 # Use the entrypoint script to run migrations and start the server
 ENTRYPOINT ["/app/entrypoint.sh"]
