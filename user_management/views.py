@@ -36,7 +36,7 @@ class CustomUserViewSet(ModelViewSet):
 
         return permissions
 
-class WEEMAEntitiesViewSet(ModelViewSet):
+class WEEMAEntitiesViewSet(ModelViewSet, ProfileUpdateMixin):
     user_permissions = {
         "create": [],
         "retrieve": [],
