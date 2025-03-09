@@ -20,7 +20,7 @@ class CustomUserViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [GroupPermission(allowed_groups=user_permissions, allow_unauthenticated = True)]
-    pagination_class = CustomPageNumberPagination
+    # pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['user_type', 'is_active', 'is_superuser']
     search_fields = ['username', 'first_name', 'last_name', 'email']
@@ -46,7 +46,7 @@ class WEEMAEntitiesViewSet(ModelViewSet):
         }
     queryset = WEEMAEntities.objects.all()
     serializer_class = WEEMAEntitiesSerializer
-    pagination_class = CustomPageNumberPagination
+    # pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['gender', 'verified', 'user__user_type']
     search_fields = ['phone_number', 'address', 'national_id']
