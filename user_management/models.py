@@ -29,6 +29,9 @@ class CustomUser(AbstractUser):
         blank=True,
         help_text='Specific permissions for this user.',
     )
+    
+    can_download_report = models.BooleanField(default=False)
+    
     def __str__(self):
         return "username" + str(self.username) if self.username else "Unknown"
 
