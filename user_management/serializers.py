@@ -14,6 +14,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'email',
             'password',
             'user_type',
+            'can_download_report'
         ]
         extra_kwargs = {
             'password': {'write_only': True}

@@ -8,6 +8,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        if user.can_download_report != None:
+            token['can_download_report'] = user.can_download_report
         token['groups'] = [group.name for group in user.groups.all()]
         if user.is_superuser:
             token['groups'].append("super_admin")
