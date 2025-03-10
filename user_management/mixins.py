@@ -11,10 +11,8 @@ class ProfileUpdateMixin:
         request,
         instance,
         user_serializer_class,
-        address_serializer_class,
         profile_serializer_class,
         user_attr,
-        address_attr,
         file_fields=None,  # Accept a list of file fields,
         restricted_field = None,
         can_update_restricted_field = False
@@ -30,19 +28,15 @@ class ProfileUpdateMixin:
 
             # Initialize dictionaries for user and address data
             user_data = {}
-            user_address_data = {}
 
             # Loop over the keys to extract and remove user and address prefixed fields
             for key in list(data.keys()):
                 if key.startswith(f'{user_attr}.'):
                     user_data[key[len(user_attr) + 1:]] = data.pop(key)
-                elif key.startswith(f'{address_attr}.'):
-                    user_address_data[key[len(address_attr) + 1:]] = data.pop(key)
         else:
             # For JSON data, we expect nested user and user_address objects
             data = request.data.copy()
             user_data = data.pop(user_attr, None)
-            user_address_data = data.pop(address_attr, None)
         
         # Handle dynamic file uploads
         files_to_upload = {field: request.FILES.get(field) for field in file_fields}
@@ -58,12 +52,6 @@ class ProfileUpdateMixin:
                     if user_serializer.is_valid(raise_exception=True):
                         user_serializer.save()
 
-                # Update the address if user_address_data is provided
-                if user_address_data:
-                    address_instance = getattr(instance, address_attr)
-                    address_serializer = address_serializer_class(instance=address_instance, data=user_address_data, partial=True)
-                    if address_serializer.is_valid(raise_exception=True):
-                        address_serializer.save()
 
                 # Now update the remaining fields in DataCollectorUserProfile using PATCH
                 profile_serializer = profile_serializer_class(instance=instance, data=data, partial=True)
