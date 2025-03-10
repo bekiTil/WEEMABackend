@@ -31,7 +31,7 @@ class AnnualChildrenStatusViewSet(ModelViewSet):
     serializer_class = AnnualChildrenStatusSerializer
     # pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['number_of_children']
+    filterset_fields = ['number_of_children','member']
     search_fields = ['member__first_name', 'member__last_name']
     ordering_fields = ['number_of_children', 'created_at', 'updated_at' ]
 
