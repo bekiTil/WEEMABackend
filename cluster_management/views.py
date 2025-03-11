@@ -40,8 +40,7 @@ class MemberViewSet(ModelViewSet):
         'is_other_shg_member_in_house',
         'is_responsible_for_children',
         'group',
-        'hh_size',
-        'group__cluster',
+        'hh_size'
     ]
     search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
     ordering_fields = ['age', 'hh_size', 'created_at', 'updated_at']
