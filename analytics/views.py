@@ -591,6 +591,14 @@ class FacilitatorAnalyticsView(APIView):
     """
     def get(self, request, facilitator_id):
         
+        try:
+            weema_entity = WEEMAEntities.objects.get(id=facilitator_id)
+        except WEEMAEntities.DoesNotExist:
+            return Response({"error": "Facilitator not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if weema_entity== None or weema_entity.user.user_type != "facilitator":
+            return Response({"error": "User is not a facilitator"}, status=status.HTTP_403_FORBIDDEN)
+        
         # Parsing date range parameters
         start_date = request.query_params.get('start_date', None)
         end_date = request.query_params.get('end_date', None)
