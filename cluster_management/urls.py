@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ClusterViewSet, SelfHelpGroupViewSet, MemberViewSet, TransferGroupsAPIView
+from .views import ClusterViewSet, SelfHelpGroupViewSet, MemberViewSet, TransferGroupsAPIView, GetListOfLocaton
 
 router = DefaultRouter()
 router.register(r'clusters', ClusterViewSet)
@@ -12,4 +12,5 @@ router.register(r'members', MemberViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('groups/transfer-groups/', TransferGroupsAPIView.as_view(), name='transfer-groups'),
+    path('groups/location/', GetListOfLocaton.as_view(), name='locations'),
 ]

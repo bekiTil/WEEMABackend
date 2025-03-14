@@ -150,3 +150,13 @@ class TransferGroupsAPIView(APIView):
             status=status.HTTP_200_OK
         )
 
+
+class GetListOfLocaton(APIView):
+    def get(self, request):
+        locations = (
+            SelfHelpGroup.objects.exclude(location__isnull=True)
+            .exclude(location="")
+            .values_list('location', flat=True)
+            .distinct()
+        )
+        return Response({"distinct_locations": list(locations)})
