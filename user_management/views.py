@@ -44,7 +44,7 @@ class WEEMAEntitiesViewSet(ModelViewSet, ProfileUpdateMixin):
         "destroy": [],
         "list": [],
         }
-    queryset = WEEMAEntities.objects.all()
+    queryset = WEEMAEntities.objects.all().order_by('-updated_at')
     serializer_class = WEEMAEntitiesSerializer
     # pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
