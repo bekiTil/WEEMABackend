@@ -304,14 +304,14 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
     
     # Prepare lists for each section
     annual_data_list = [
-        ["cluster", "group","member", "age", "gender", "education_level", "marital_status", "family_size", "household_size", 
+        ["cluster", "group","member", "dob", "gender", "education_level", "marital_status", "family_size", "household_size", 
          "total_savings", "loan_rounds_taken", "estimated_value_of_household_assets", "household_decision_making",
          "community_decision_making", "mortality_children_under_5", "mortality_other_household_members", 
          "housing", "have_latrine", "electricity", "drinking_water"]
     ]
 
     for data in annual_member_data:
-        annual_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.member.age, data.member.gender, data.education_level, 
+        annual_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.member.dob, data.member.gender, data.education_level, 
                                  data.marital_status, data.family_size, data.household_size, 
                                  data.total_savings, data.loan_rounds_taken, 
                                  data.estimated_value_of_household_assets, data.household_decision_making, 

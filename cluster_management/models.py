@@ -113,7 +113,8 @@ class Member(BaseModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    age = models.PositiveIntegerField()
+    # age = models.PositiveIntegerField()
+    dob = models.DateField(null=True, blank=True)  # Date of Birth field
     hh_size = models.PositiveIntegerField(null=True, blank=True)  # Household size
     marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, null=True, blank=True)
     religion = models.CharField(max_length=20, choices=RELIGION_CHOICES, null=True, blank=True)
