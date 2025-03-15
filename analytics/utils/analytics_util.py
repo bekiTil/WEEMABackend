@@ -19,9 +19,9 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
 
     # Get distinct, non-empty location values from SelfHelpGroup
     locations = (SelfHelpGroup.objects
-                    .exclude(location__isnull=True)
-                    .exclude(location__exact="")
-                    .values_list('location', flat=True)
+                    .exclude(region__isnull=True)
+                    .exclude(region__exact="")
+                    .values_list('region', flat=True)
                     .distinct())
 
     report_data = [["Location", "Total Groups", "Total Members", "Total hh size", "Total Savings", "Total Capital", "Total Loan Circulated","Avg Iga Capital"]]
@@ -30,9 +30,9 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
     for loc in locations:
         # Groups at this location
         if cluster:
-            groups = SelfHelpGroup.objects.filter(location=loc, cluster = cluster)
+            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
         else:
-            groups = SelfHelpGroup.objects.filter(location=loc)
+            groups = SelfHelpGroup.objects.filter(region=loc)
         total_groups = groups.count()
 
         # Members in these groups
@@ -83,9 +83,9 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
     # Get distinct, non-empty location values from SelfHelpGroup
     locations = (
         SelfHelpGroup.objects
-        .exclude(location__isnull=True)
-        .exclude(location__exact="")
-        .values_list('location', flat=True)
+        .exclude(region__isnull=True)
+        .exclude(region__exact="")
+        .values_list('region', flat=True)
         .distinct()
     )
     
@@ -106,9 +106,9 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
     for loc in locations:
         
         if cluster:
-            groups = SelfHelpGroup.objects.filter(location=loc, cluster = cluster)
+            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
         else:
-            groups = SelfHelpGroup.objects.filter(location=loc)
+            groups = SelfHelpGroup.objects.filter(region=loc)
             
         members = Member.objects.filter(group__in=groups)
         total_members = members.count()
@@ -178,16 +178,16 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
     # Get all locations
     locations = (
         SelfHelpGroup.objects
-        .exclude(location__isnull=True)
-        .exclude(location__exact="")
-        .values_list('location', flat=True)
+        .exclude(region__isnull=True)
+        .exclude(region__exact="")
+        .values_list('region', flat=True)
         .distinct()
     )
     
     # Prepare CSV data
     csv_data = [
         [
-            "Location",
+            "Regions",
             "Total Members",
             "Total Household Size",
             "Average Meals Per Day",
@@ -201,9 +201,9 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
     for loc in locations:
         # Get groups in this location
         if cluster:
-            groups = SelfHelpGroup.objects.filter(location=loc, cluster = cluster)
+            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
         else:
-            groups = SelfHelpGroup.objects.filter(location=loc)
+            groups = SelfHelpGroup.objects.filter(region=loc)
         
         # Get all members in those groups
         members = Member.objects.filter(group__in=groups)
@@ -304,14 +304,14 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
     
     # Prepare lists for each section
     annual_data_list = [
-        ["member", "age", "gender", "education_level", "marital_status", "family_size", "household_size", 
+        ["cluster", "group","member", "age", "gender", "education_level", "marital_status", "family_size", "household_size", 
          "total_savings", "loan_rounds_taken", "estimated_value_of_household_assets", "household_decision_making",
          "community_decision_making", "mortality_children_under_5", "mortality_other_household_members", 
          "housing", "have_latrine", "electricity", "drinking_water"]
     ]
 
     for data in annual_member_data:
-        annual_data_list.append([data.member.first_name + " " + data.member.last_name, data.age, data.gender, data.education_level, 
+        annual_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.age, data.gender, data.education_level, 
                                  data.marital_status, data.family_size, data.household_size, 
                                  data.total_savings, data.loan_rounds_taken, 
                                  data.estimated_value_of_household_assets, data.household_decision_making, 
@@ -320,14 +320,14 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
                                  data.have_latrine, data.electricity, data.drinking_water])
 
     six_month_data_list = [
-        ["member", "active_iga", "iga_activity_code", "iga_capital", "loan_amount_received_shg", 
+        ["cluster", "group", "member", "active_iga", "iga_activity_code", "iga_capital", "loan_amount_received_shg", 
          "loan_source_code", "loan_amount_from_other_sources", "purpose_of_loan", "approx_monthly_personal_income",
          "approx_monthly_household_income", "meals_per_day_for_children", "meals_per_day_for_adults", 
          "days_diarrhea_children", "days_other_illness_children", "days_diarrhea_others", "days_other_illness_others"]
     ]
 
     for data in member_sixmonth_data:
-        six_month_data_list.append([data.member.first_name + " " + data.member.last_name, data.active_iga, data.iga_activity_code, data.iga_capital, 
+        six_month_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.active_iga, data.iga_activity_code, data.iga_capital, 
                                     data.loan_amount_received_shg, data.loan_source_code, 
                                     data.loan_amount_from_other_sources, data.purpose_of_loan, 
                                     data.approx_monthly_personal_income, data.approx_monthly_household_income, 
@@ -336,14 +336,14 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
                                     data.days_diarrhea_others, data.days_other_illness_others])
 
     children_status_list = [
-        ["member", "number_of_children", "child_1_name", "child_1_gender", "child_1_age", "child_1_school_status",
+        ["cluster", "group", "member", "number_of_children", "child_1_name", "child_1_gender", "child_1_age", "child_1_school_status",
          "child_2_name", "child_2_gender", "child_2_age", "child_2_school_status", "child_3_name", 
          "child_3_gender", "child_3_age", "child_3_school_status", "child_4_name", "child_4_gender", 
          "child_4_age", "child_4_school_status", "child_5_name", "child_5_gender", "child_5_age", "child_5_school_status"]
     ]
 
     for status in annual_childeren_status:
-        children_status_list.append([data.member.first_name + " " + data.member.last_name, status.number_of_children, status.child_1_name, 
+        children_status_list.append([status.member.group.cluster.cluster_name, status.member.group.group_name, status.member.first_name + " " + status.member.last_name, status.number_of_children, status.child_1_name, 
                                      status.child_1_gender, status.child_1_age, status.child_1_school_status,
                                      status.child_2_name, status.child_2_gender, status.child_2_age, 
                                      status.child_2_school_status, status.child_3_name, status.child_3_gender, 
@@ -353,7 +353,7 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
                                      status.child_5_school_status])
 
     group_status_list = [
-        ["group", "amount_regular_saving", "shg_capital", "num_members_taken_loan", "smallest_loan_given", 
+        ["cluster","group", "amount_regular_saving", "shg_capital", "num_members_taken_loan", "smallest_loan_given", 
          "largest_loan_given", "amount_loans_written_off", "amount_invested_in_group_iga", "group_iga_code1", 
          "description", "income_social_savings", "expenditure_social_savings", "num_shg_members_social_support", 
          "num_people_outside_shg_social_support", "num_other_supporting_institutions", "min_monthly_personal", 
@@ -362,7 +362,7 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
     ]
 
     for status in annual_group_status:
-        group_status_list.append([status.group.group_name, status.amount_regular_saving, status.shg_capital, 
+        group_status_list.append([status.group.cluster.cluster_name, status.group.group_name, status.amount_regular_saving, status.shg_capital, 
                                   status.num_members_taken_loan, status.smallest_loan_given, 
                                   status.largest_loan_given, status.amount_loans_written_off, 
                                   status.amount_invested_in_group_iga, status.group_iga_code1, 
