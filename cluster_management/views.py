@@ -40,7 +40,6 @@ class MemberViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
         'gender',
-        'age',
         'marital_status',
         'religion',
         'is_other_shg_member_in_house',
@@ -50,7 +49,7 @@ class MemberViewSet(ModelViewSet):
         'group__cluster',
     ]
     search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
-    ordering_fields = ['age', 'hh_size', 'created_at', 'updated_at']
+    ordering_fields = ['hh_size', 'created_at', 'updated_at']
 
 
 class TransferGroupsAPIView(APIView):

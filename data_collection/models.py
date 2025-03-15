@@ -123,8 +123,6 @@ class AnnualData(BaseModel):
 
     # Model Fields
     member  = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="annual_data_members")
-    age = models.IntegerField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     education_level = models.CharField(max_length=100, choices=EDUCATION_LEVEL_CHOICES)
     marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES)
     family_size = models.IntegerField()
