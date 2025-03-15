@@ -6,10 +6,16 @@ from .serializers import ClusterSerializer, SelfHelpGroupSerializer, MemberSeria
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
+
+
 
 # Cluster ViewSet
 class ClusterViewSet(ModelViewSet):
-    queryset = Cluster.objects.all()
+    queryset = Cluster.objects.all().order_by('-updated_at')
     serializer_class = ClusterSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'location', 'cluster_manager']
@@ -19,7 +25,7 @@ class ClusterViewSet(ModelViewSet):
 
 # Self Help Group ViewSet
 class SelfHelpGroupViewSet(ModelViewSet):
-    queryset = SelfHelpGroup.objects.all()
+    queryset = SelfHelpGroup.objects.all().order_by('-updated_at')
     serializer_class = SelfHelpGroupSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'location', 'cluster', 'group_leader', 'facilitator', 'longitude', 'latitude', 'location']
@@ -29,7 +35,7 @@ class SelfHelpGroupViewSet(ModelViewSet):
 
 # Member ViewSet
 class MemberViewSet(ModelViewSet):
-    queryset = Member.objects.all()
+    queryset = Member.objects.all().order_by('-updated_at')
     serializer_class = MemberSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
@@ -46,11 +52,6 @@ class MemberViewSet(ModelViewSet):
     search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
     ordering_fields = ['age', 'hh_size', 'created_at', 'updated_at']
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.core.exceptions import ObjectDoesNotExist
-from .models import SelfHelpGroup, Cluster
 
 class TransferGroupsAPIView(APIView):
     """

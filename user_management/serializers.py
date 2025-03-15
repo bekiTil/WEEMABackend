@@ -37,6 +37,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
                     group_name = 'ClusterManager'
                 case 'shg_lead':
                     group_name = 'SHGLead'
+                case 'report_super_admin':
+                    group_name = 'ReportSuperAdmin'
                 case _:
                     group_name = None
 
