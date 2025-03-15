@@ -311,7 +311,7 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
     ]
 
     for data in annual_member_data:
-        annual_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.age, data.gender, data.education_level, 
+        annual_data_list.append([data.member.group.cluster.cluster_name, data.member.group.group_name, data.member.first_name + " " + data.member.last_name, data.member.age, data.member.gender, data.education_level, 
                                  data.marital_status, data.family_size, data.household_size, 
                                  data.total_savings, data.loan_rounds_taken, 
                                  data.estimated_value_of_household_assets, data.household_decision_making, 
