@@ -22,7 +22,7 @@ class SelfHelpGroupViewSet(ModelViewSet):
     queryset = SelfHelpGroup.objects.all()
     serializer_class = SelfHelpGroupSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'location', 'cluster', 'group_leader', 'facilitator', 'longitude', 'latitude']
+    filterset_fields = ['status', 'location', 'cluster', 'group_leader', 'facilitator', 'longitude', 'latitude', 'location']
     search_fields = ['group_name', 'location', 'facilitator']
     ordering_fields = ['group_name', 'total_members', 'created_at', 'updated_at']
 
@@ -150,3 +150,13 @@ class TransferGroupsAPIView(APIView):
             status=status.HTTP_200_OK
         )
 
+
+class GetListOfLocaton(APIView):
+    def get(self, request):
+        locations = (
+            SelfHelpGroup.objects.exclude(location__isnull=True)
+            .exclude(location="")
+            .values_list('location', flat=True)
+            .distinct()
+        )
+        return Response({"distinct_locations": list(locations)})
