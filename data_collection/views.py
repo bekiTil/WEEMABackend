@@ -19,12 +19,12 @@ class AnnualDataViewSet(ModelViewSet):
     serializer_class = AnnualDataSerializer
     # pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['member', 'age', 'gender', 'marital_status', 'family_size', 'household_size', 'total_savings', 
+    filterset_fields = ['member', 'marital_status', 'family_size', 'household_size', 'total_savings', 
                         'loan_rounds_taken', 'estimated_value_of_household_assets', 'household_decision_making', 
                         'community_decision_making', 'mortality_children_under_5', 'mortality_other_household_members', 
                         'housing', 'have_latrine', 'electricity', 'drinking_water']
     search_fields = ['member__first_name', 'member__last_name', 'gender', 'marital_status', 'education_level', 'housing']
-    ordering_fields = ['member', 'age', 'gender', 'marital_status', 'family_size','created_at', 'updated_at']
+    ordering_fields = ['member', 'marital_status', 'family_size','created_at', 'updated_at']
 
 class AnnualChildrenStatusViewSet(ModelViewSet):
     queryset = AnnualChildrenStatus.objects.all().order_by('-updated_at')

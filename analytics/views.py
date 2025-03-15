@@ -871,7 +871,7 @@ class ZoneLevelReportView(APIView):
             end_date = parse_datetime(end_date)
 
         # Get all groups and members in the cluster
-        groups = SelfHelpGroup.objects.filter(zone=zone)
+        groups = SelfHelpGroup.objects.filter(Zone=zone)
         members = Member.objects.filter(group__in=groups)
 
         # Filtering data based on the time range
