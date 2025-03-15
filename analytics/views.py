@@ -201,6 +201,7 @@ class DashboardMetricsView(APIView):
         # Extract cluster_id or group_id from request query parameters
         cluster_id = request.query_params.get('cluster_id', None)
         group_id = request.query_params.get('group_id', None)
+        location = request.query_params.get('location', None)
 
         # Parse date range (optional for growth metrics)
         start_date = request.query_params.get('start_date', None)
@@ -783,6 +784,137 @@ class LocationLevelReportView(APIView):
 
         # Get all groups and members in the cluster
         groups = SelfHelpGroup.objects.filter(location=location)
+        members = Member.objects.filter(group__in=groups)
+
+        # Filtering data based on the time range
+        filters = {}
+        if start_date and end_date:
+            filters['created_at__range'] = [start_date, end_date]
+
+        # Aggregating data
+        total_shgs = groups.count()
+        total_members = members.count()
+        total_household_size = members.aggregate(total=Sum('hh_size'))['total']
+        total_savings = AnnualData.objects.filter(member__in=members, **filters).aggregate(total=Sum('total_savings'))['total']
+        total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
+        total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
+        average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
+
+        return Response({
+            'location': location,
+            'total_shgs': total_shgs,
+            'total_members': total_members,
+            'total_household_size': total_household_size,
+            'total_savings': total_savings,
+            'total_capital': total_capital,
+            'total_loan_circulated': total_loan_circulated,
+            'average_iga_capital': average_iga_capital,
+        }, status=status.HTTP_200_OK)
+
+
+class RegionLevelReportView(APIView):
+    """
+    Location-level report, aggregated for a given cluster.
+    """
+    def get(self, request, region):
+        # Parsing date range parameters
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+
+        if start_date:
+            start_date = parse_datetime(start_date)
+        if end_date:
+            end_date = parse_datetime(end_date)
+
+        # Get all groups and members in the cluster
+        groups = SelfHelpGroup.objects.filter(region=region)
+        members = Member.objects.filter(group__in=groups)
+
+        # Filtering data based on the time range
+        filters = {}
+        if start_date and end_date:
+            filters['created_at__range'] = [start_date, end_date]
+
+        # Aggregating data
+        total_shgs = groups.count()
+        total_members = members.count()
+        total_household_size = members.aggregate(total=Sum('hh_size'))['total']
+        total_savings = AnnualData.objects.filter(member__in=members, **filters).aggregate(total=Sum('total_savings'))['total']
+        total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
+        total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
+        average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
+
+        return Response({
+            'location': location,
+            'total_shgs': total_shgs,
+            'total_members': total_members,
+            'total_household_size': total_household_size,
+            'total_savings': total_savings,
+            'total_capital': total_capital,
+            'total_loan_circulated': total_loan_circulated,
+            'average_iga_capital': average_iga_capital,
+        }, status=status.HTTP_200_OK)
+
+
+class ZoneLevelReportView(APIView):
+    """
+    Location-level report, aggregated for a given cluster.
+    """
+    def get(self, request, zone):
+        # Parsing date range parameters
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+
+        if start_date:
+            start_date = parse_datetime(start_date)
+        if end_date:
+            end_date = parse_datetime(end_date)
+
+        # Get all groups and members in the cluster
+        groups = SelfHelpGroup.objects.filter(zone=zone)
+        members = Member.objects.filter(group__in=groups)
+
+        # Filtering data based on the time range
+        filters = {}
+        if start_date and end_date:
+            filters['created_at__range'] = [start_date, end_date]
+
+        # Aggregating data
+        total_shgs = groups.count()
+        total_members = members.count()
+        total_household_size = members.aggregate(total=Sum('hh_size'))['total']
+        total_savings = AnnualData.objects.filter(member__in=members, **filters).aggregate(total=Sum('total_savings'))['total']
+        total_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('iga_capital'))['total']
+        total_loan_circulated = SixMonthData.objects.filter(member__in=members, **filters).aggregate(total=Sum('loan_amount_received_shg'))['total']
+        average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
+
+        return Response({
+            'location': location,
+            'total_shgs': total_shgs,
+            'total_members': total_members,
+            'total_household_size': total_household_size,
+            'total_savings': total_savings,
+            'total_capital': total_capital,
+            'total_loan_circulated': total_loan_circulated,
+            'average_iga_capital': average_iga_capital,
+        }, status=status.HTTP_200_OK)
+
+class WoredaLevelReportView(APIView):
+    """
+    Location-level report, aggregated for a given cluster.
+    """
+    def get(self, request, woreda):
+        # Parsing date range parameters
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+
+        if start_date:
+            start_date = parse_datetime(start_date)
+        if end_date:
+            end_date = parse_datetime(end_date)
+
+        # Get all groups and members in the cluster
+        groups = SelfHelpGroup.objects.filter(woreda=woreda)
         members = Member.objects.filter(group__in=groups)
 
         # Filtering data based on the time range

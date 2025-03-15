@@ -8,7 +8,10 @@ from .views import (
     MemberDataReportView,
     FacilitatorAnalyticsView,
     LocationLevelAnalyticsPDFView,
-    LocationLevelReportView
+    LocationLevelReportView,
+    RegionLevelReportView,
+    ZoneLevelReportView,
+    WoredaLevelReportView
 )
 from .graph_views import LocationAnalyticsGraphsPDFView, GroupLevelFinancialMetricsAPIView, DumpAllDataView
 
@@ -16,6 +19,9 @@ urlpatterns = [
     path('reports/system/', SystemLevelReportView.as_view(), name='system-level-report'),
     path('reports/cluster/<uuid:cluster_id>/', ClusterLevelReportView.as_view(), name='cluster-level-report'),
     path('reports/location/<str:location>/', LocationLevelReportView.as_view(), name='location-level-report'),
+    path('reports/region/<str:region>/', RegionLevelReportView.as_view(), name='region-level-report'),
+    path('reports/zone/<str:zone>/', ZoneLevelReportView.as_view(), name='woreda-level-report'),
+    path('reports/woreda/<str:woreda>/', WoredaLevelReportView.as_view(), name='zone-level-report'),
     path('reports/facilitator/<uuid:facilitator_id>/', FacilitatorAnalyticsView.as_view(), name='facilitator-level-report'),
     path('reports/group/<uuid:group_id>/', SelfHelpGroupLevelReportView.as_view(), name='group-level-report'),
     path('reports/dashboard/', DashboardMetricsView.as_view(), name='dashboard-report'),

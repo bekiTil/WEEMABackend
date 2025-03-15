@@ -21,13 +21,13 @@ def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
         groups_qs = groups_qs.filter(cluster=cluster)
     
     # Get distinct, non-empty location values from SelfHelpGroup.
-    locations = groups_qs.exclude(location__isnull=True).exclude(location__exact="").values_list('location', flat=True).distinct()
+    locations = groups_qs.exclude(region__isnull=True).exclude(region__exact="").values_list('region', flat=True).distinct()
 
     results = {}
 
     for loc in locations:
         # For each location, get all groups at that location
-        groups = groups_qs.filter(location=loc)
+        groups = groups_qs.filter(region=loc)
         total_groups = groups.count()
 
         # Get all members that belong to these groups

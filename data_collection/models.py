@@ -147,8 +147,8 @@ class AnnualData(BaseModel):
 class AnnualChildrenStatus(BaseModel):
     # Choices for Gender
     GENDER_CHOICES = [
-        ("male", "Male"),
-        ("female", "Female"),
+        ("Male", "Male"),
+        ("Female", "Female"),
     ]
 
     # Choices for School Status
