@@ -27,6 +27,7 @@ class SixMonthData(BaseModel):
         ("social_events", "Social Events"),
         ("furniture", "Furniture"),
         ("education", "Education"),
+        ("business", "Business"),
         ("others", "Others"),
     ]
 
