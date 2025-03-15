@@ -7,9 +7,10 @@ import uuid
 class CustomUser(AbstractUser):
     USER_TYPES = [
         ('super_admin', 'SUPER_ADMIN'),
+        ('report_super_admin', 'REPORT_SUPER_ADMIN'),
         ('facilitator', 'FACILITATOR'),
         ('cluster_manager', 'CLUSTER_MANAGER'),
-        ('shg_lead', 'SHG_LEAD'),
+        ('shg_lead', 'SHG_LEAD'),  
     ]
     user_type = models.CharField(max_length=40, choices=USER_TYPES)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
