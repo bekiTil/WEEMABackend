@@ -1,5 +1,6 @@
 from django.db import models
 from cluster_management.models import Member, SelfHelpGroup
+from django.contrib.postgres.fields import ArrayField
 from WEEMA.models import BaseModel
 class SixMonthData(BaseModel):
     # Choices for IGA Activities
@@ -26,6 +27,7 @@ class SixMonthData(BaseModel):
         ("social_events", "Social Events"),
         ("furniture", "Furniture"),
         ("education", "Education"),
+        ("business", "Business"),
         ("others", "Others"),
     ]
 
@@ -233,7 +235,11 @@ class AnnualSelfHelpGroupData(BaseModel):
     other_insurance_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     other_social_need_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     others = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    training_received_in_year = models.CharField(max_length=100, choices=TRAINING_RECEIVED_CHOICES, null=True, blank=True)
+    training_received_in_year = ArrayField(
+        models.CharField(max_length=50, choices=TRAINING_RECEIVED_CHOICES),
+        default=list,
+        blank=True
+    )
 
     def __str__(self):
         return self.name

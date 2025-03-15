@@ -845,7 +845,7 @@ class RegionLevelReportView(APIView):
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
 
         return Response({
-            'location': location,
+            'region': region,
             'total_shgs': total_shgs,
             'total_members': total_members,
             'total_household_size': total_household_size,
@@ -889,7 +889,7 @@ class ZoneLevelReportView(APIView):
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
 
         return Response({
-            'location': location,
+            'zone': zone,
             'total_shgs': total_shgs,
             'total_members': total_members,
             'total_household_size': total_household_size,
@@ -932,7 +932,7 @@ class WoredaLevelReportView(APIView):
         average_iga_capital = SixMonthData.objects.filter(member__in=members, **filters).aggregate(avg=Avg('iga_capital'))['avg']
 
         return Response({
-            'location': location,
+            'woreda': woreda,
             'total_shgs': total_shgs,
             'total_members': total_members,
             'total_household_size': total_household_size,
