@@ -47,6 +47,8 @@ class MemberViewSet(ModelViewSet):
         'group',
         'hh_size',
         'group__cluster',
+        'group__facilitator',
+        'group__cluster'
     ]
     search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
     ordering_fields = ['hh_size', 'created_at', 'updated_at']
