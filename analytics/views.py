@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Sum, Avg, Max, Min, F, Q
-from data_collection.models import SixMonthData, AnnualData, AnnualChildrenStatus
+from data_collection.models import SixMonthData, AnnualData, AnnualChildrenStatus, AnnualSelfHelpGroupData
 from user_management.models import WEEMAEntities
 from cluster_management.models import SelfHelpGroup, Cluster, Member
 from user_management.models import CustomUser
@@ -26,6 +26,7 @@ from datetime import datetime
 from .utils.analytics_util import get_location_level_group_report, get_location_level_loan_saving_report, get_location_level_hh_report  
 import os
 from django.conf import settings
+from django.utils.dateparse import parse_date
 
 class SystemLevelReportView(APIView):
     """
@@ -942,3 +943,64 @@ class WoredaLevelReportView(APIView):
             'average_iga_capital': average_iga_capital,
         }, status=status.HTTP_200_OK)
 
+
+
+class GroupFinancialSupportTotalAPIView(APIView):
+    def get(self, request, *args, **kwargs):  
+        start_date = request.query_params.get('start_date', None)  
+        end_date = request.query_params.get('end_date', None) 
+         
+        cluster = request.query_params.get('cluster', None)
+        facilitator = request.query_params.get('facilitator', None)
+        group_ids = request.query_params.getlist('group_ids', None)
+        
+        region = request.query_params.get('region', None)
+        zone = request.query_params.get('zone', None)
+        woreda = request.query_params.get('woreda', None)
+        
+        
+        
+        group_queryset = SelfHelpGroup.objects.all()
+        
+        if cluster:
+            group_queryset = group_queryset.filter(cluster = cluster)
+        
+        if facilitator:
+            group_queryset = group_queryset.filter(facilitator = facilitator)
+        
+        if group_ids:
+            group_queryset = group_queryset.filter(id__in=group_ids)
+        
+        if region:
+            group_queryset = group_queryset.filter(region = region)
+        
+        if zone:
+            group_queryset = group_queryset.filter(Zone = zone)
+        
+        if woreda:
+            group_queryset = group_queryset.filter(woreda = woreda)
+
+        
+        
+        
+        queryset = AnnualSelfHelpGroupData.objects.filter(group__in=group_queryset)
+
+        if start_date:
+            start_date = parse_date(start_date)
+            if start_date:
+                queryset = queryset.filter(created_at__gte=start_date)
+
+        if end_date:
+            end_date = parse_date(end_date)
+            if end_date:
+                queryset = queryset.filter(created_at__lte=end_date)
+
+        # Step 4: Aggregate the required fields
+        data = queryset.aggregate(
+            total_other_social_need_amount=Sum('other_social_need_amount', default=0),
+            total_other_insurance_need_amount=Sum('other_insurance_need_amount', default=0),
+            total_other_member_health_care_support_amount=Sum('other_member_health_care_support_amount', default=0),
+            total_shg_member_health_care_support_amount=Sum('shg_member_health_care_support_amount', default=0),
+        )
+
+        return Response(data, status=status.HTTP_200_OK)

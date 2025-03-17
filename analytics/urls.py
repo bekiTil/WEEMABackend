@@ -11,7 +11,8 @@ from .views import (
     LocationLevelReportView,
     RegionLevelReportView,
     ZoneLevelReportView,
-    WoredaLevelReportView
+    WoredaLevelReportView,
+    GroupFinancialSupportTotalAPIView
 )
 from .graph_views import LocationAnalyticsGraphsPDFView, GroupLevelFinancialMetricsAPIView, DumpAllDataView
 
@@ -33,4 +34,6 @@ urlpatterns = [
     path('reports/pdf/graph/highlevel', LocationAnalyticsGraphsPDFView.as_view(), name="pdf_graph_heigh_level_report"),
     path('reports/pdf/graph/quality-control', GroupLevelFinancialMetricsAPIView.as_view(), name="pdf_graph_quality_control_report"),
     path('reports/dump-all-data', DumpAllDataView.as_view(), name="dump_all_data"),
+    
+    path('reports/group-financial-support/', GroupFinancialSupportTotalAPIView.as_view(), name='group-financial-support'),
 ]
