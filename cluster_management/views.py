@@ -2,6 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Cluster, SelfHelpGroup, Member
+from user_management.models import WEEMAEntities
 from .serializers import ClusterSerializer, SelfHelpGroupSerializer, MemberSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -21,6 +22,26 @@ class ClusterViewSet(ModelViewSet):
     filterset_fields = ['status', 'location', 'cluster_manager']
     search_fields = ['cluster_name', 'location']
     ordering_fields = ['cluster_name', 'total_groups', 'created_at', 'updated_at']
+    
+    def get_queryset(self):
+        queryset = Cluster.objects.all().order_by('-updated_at')
+        profile_id = self.request.query_params.get('profile_id', None)
+
+        if profile_id:
+            
+            entity = WEEMAEntities.objects.filter(id=profile_id)
+            if not entity:
+                return Cluster.objects.none()
+            else :
+                if entity.user.user_type == "facilitator":
+                    queryset = queryset.filter(cluster_manager=profile_id)
+                elif entity.user.user_type == "cluster_manager":
+                    queryset = queryset.filter(cluster_manager=profile_id)
+                else:
+                    pass
+                
+
+        return queryset
 
 
 # Self Help Group ViewSet
@@ -31,6 +52,27 @@ class SelfHelpGroupViewSet(ModelViewSet):
     filterset_fields = ['status', 'location', 'cluster', 'group_leader', 'facilitator', 'longitude', 'latitude', 'location']
     search_fields = ['group_name', 'location', 'facilitator']
     ordering_fields = ['group_name', 'total_members', 'created_at', 'updated_at']
+    
+    
+    def get_queryset(self):
+        queryset = SelfHelpGroup.objects.all().order_by('-updated_at')
+        profile_id = self.request.query_params.get('profile_id', None)
+
+        if profile_id:
+            
+            entity = WEEMAEntities.objects.filter(id=profile_id)
+            if not entity:
+                return SelfHelpGroup.objects.none()
+            else:
+                if entity.user.user_type == "facilitator":
+                    queryset = queryset.filter(facilitator = profile_id)
+                elif entity.user.user_type == "cluster_manager":
+                    queryset = queryset.filter(cluster__cluster_manager = profile_id)
+                else:
+                    pass
+            
+
+        return queryset
 
 
 # Member ViewSet
@@ -52,6 +94,29 @@ class MemberViewSet(ModelViewSet):
     ]
     search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
     ordering_fields = ['hh_size', 'created_at', 'updated_at']
+    
+    def get_queryset(self):
+        queryset = Member.objects.all().order_by('-updated_at')
+        profile_id = self.request.query_params.get('profile_id', None)
+
+        if profile_id:
+            
+            entity = WEEMAEntities.objects.filter(id=profile_id)
+            if not entity:
+                return Member.objects.none()
+            else:
+                if entity.user.user_type == "facilitator":
+                    queryset = queryset.filter(group__facilitator = profile_id)
+                elif entity.user.user_type == "cluster_manager":
+                    queryset = queryset.filter(group__cluster__cluster_manager = profile_id)
+                else:
+                    pass
+            
+
+        return queryset
+
+    
+    
 
 
 class TransferGroupsAPIView(APIView):
