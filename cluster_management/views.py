@@ -29,7 +29,7 @@ class ClusterViewSet(ModelViewSet):
 
         if profile_id:
             
-            entity = WEEMAEntities.objects.filter(id=profile_id)
+            entity = WEEMAEntities.objects.filter(id=profile_id).first()
             if not entity:
                 return Cluster.objects.none()
             else :
@@ -60,7 +60,7 @@ class SelfHelpGroupViewSet(ModelViewSet):
 
         if profile_id:
             
-            entity = WEEMAEntities.objects.filter(id=profile_id)
+            entity = WEEMAEntities.objects.filter(id=profile_id).first()
             if not entity:
                 return SelfHelpGroup.objects.none()
             else:
@@ -101,7 +101,7 @@ class MemberViewSet(ModelViewSet):
 
         if profile_id:
             
-            entity = WEEMAEntities.objects.filter(id=profile_id)
+            entity = WEEMAEntities.objects.filter(id=profile_id).first()
             if not entity:
                 return Member.objects.none()
             else:
