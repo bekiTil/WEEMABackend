@@ -120,6 +120,82 @@ class AnnualData(BaseModel):
         ("Completed secondary school", "Completed secondary school"),
         ("Completed teritiary education" , "Completed teritiary education"),
     ]
+    
+    FLOOR_MATERIAL_CHOICES = [
+        ("mud_dung", "Mud/Dung"),
+        ("bamboo_reed", "Bamboo/Reed"),
+        ("wood_planks", "Wood planks"),
+        ("parquet", "Parquet or polished wood"),
+        ("cement_screed", "Cement screed"),
+        ("plastic_tiles", "Plastic tiles"),
+        ("cement_tiles", "Cement tiles"),
+        ("brick_tiles", "Brick tiles"),
+        ("ceramic_marble_tiles", "Ceramic/Marble tiles"),
+        ("other", "Other"),
+    ]
+
+    LIGHT_SOURCE_CHOICES = [
+        ("electricity_private", "Electricity meter - Private"),
+        ("electricity_shared", "Electricity meter - Shared"),
+        ("generator", "Electricity from generator"),
+        ("solar", "Solar energy"),
+        ("biogas", "Bio-gas"),
+        ("flashlight_rechargeable", "Flashlight, Rechargeable battery"),
+        ("lamp", "Lantern, Lamp"),
+        ("flashlight_regular", "Flashlight, Regular batteries"),
+        ("lantern_covered", "Lantern, covered flame"),
+        ("lantern_uncovered", "Lantern, uncovered flame"),
+        ("candle", "Candle/Wax"),
+        ("firewood", "Firewood"),
+        ("other", "Other"),
+    ]
+
+    HUNGER_SCALE_CHOICES = [
+        ("never", "Never"),
+        ("rarely", "Rarely"),
+        ("sometimes", "Sometimes"),
+        ("often", "Often"),
+    ]
+
+    YES_NO_CHOICES = [
+        ("yes", "Yes"),
+        ("no", "No"),
+    ]
+
+    DRINKING_WATER_SOURCE_CHOICES = [
+        ("piped_compound", "Piped into compound or house"),
+        ("community_tap", "Community tap/standpipe"),
+        ("protected_spring", "Protected spring"),
+        ("unprotected_spring", "Unprotected spring"),
+        ("well_protected", "Hand-dug well (protected)"),
+        ("well_unprotected", "Hand-dug well (unprotected)"),
+        ("rainwater", "Rainwater collection"),
+        ("surface_water", "Surface water (river, lake, pond)"),
+        ("water_truck", "Water truck/vendor"),
+        ("other", "Other"),
+    ]
+
+    WATER_DAYS_CHOICES = [
+        ("0", "0 days"),
+        ("1_3", "1–3 days"),
+        ("4_7", "4–7 days"),
+        ("more_than_7", "More than 7 days"),
+    ]
+
+    WATER_FETCH_TIME_CHOICES = [
+        ("lt_30", "Less than 30 minutes"),
+        ("30_60", "30–60 minutes"),
+        ("gt_60", "More than 1 hour"),
+    ]
+
+    WATER_COLLECTOR_CHOICES = [
+        ("adult_woman", "Adult woman"),
+        ("adult_man", "Adult man"),
+        ("girl_under_15", "Girl under 15"),
+        ("boy_under_15", "Boy under 15"),
+        ("other", "Other"),
+    ]
+
 
     # Model Fields
     member  = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="annual_data_members")
@@ -138,6 +214,35 @@ class AnnualData(BaseModel):
     have_latrine = models.BooleanField(default=False, verbose_name="Have Latrine?")
     electricity = models.BooleanField(default=False, verbose_name="Electricity?")
     drinking_water = models.CharField(max_length=50, choices=DRINKING_WATER_CHOICES, verbose_name="Drinking Water Source")
+    
+    
+    
+    floor_material = models.CharField(max_length=50, choices=FLOOR_MATERIAL_CHOICES, blank=True, null=True)
+    main_light_source = models.CharField(max_length=50, choices=LIGHT_SOURCE_CHOICES, blank=True, null=True)
+
+    consumed_tomatoes = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    consumed_potatoes = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    consumed_tea = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    bought_soap = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    bought_charcoal = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+
+    hunger_no_food = models.CharField(max_length=10, choices=HUNGER_SCALE_CHOICES, blank=True, null=True)
+    hunger_sleep_hungry = models.CharField(max_length=10, choices=HUNGER_SCALE_CHOICES, blank=True, null=True)
+    hunger_whole_day_night = models.CharField(max_length=10, choices=HUNGER_SCALE_CHOICES, blank=True, null=True)
+
+    # Social Capability
+    confident_public_speaking = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    future_goals = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    participate_household_decisions = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    support_network = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    access_to_resources = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+    leaders_listen_to_women = models.CharField(max_length=10, choices=YES_NO_CHOICES, blank=True, null=True)
+
+    # Water Services
+    main_drinking_water_source = models.CharField(max_length=50, choices=DRINKING_WATER_SOURCE_CHOICES, blank=True, null=True)
+    days_without_water = models.CharField(max_length=20, choices=WATER_DAYS_CHOICES, blank=True, null=True)
+    time_to_fetch_water = models.CharField(max_length=20, choices=WATER_FETCH_TIME_CHOICES, blank=True, null=True)
+    who_collects_water =  ArrayField(models.CharField(max_length=20, choices=WATER_COLLECTOR_CHOICES), default=list,blank=True)
 
     def __str__(self):
         return f"Annual Data for Household with {self.members} Members"

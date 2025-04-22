@@ -307,7 +307,15 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
         ["cluster", "group","member", "dob", "gender", "education_level", "marital_status", "family_size", "household_size", 
          "total_savings", "loan_rounds_taken", "estimated_value_of_household_assets", "household_decision_making",
          "community_decision_making", "mortality_children_under_5", "mortality_other_household_members", 
-         "housing", "have_latrine", "electricity", "drinking_water"]
+         "housing", "have_latrine", "electricity", "drinking_water",
+         
+         "floor_material", "main_light_source",
+         
+        "consumed_tomatoes", "consumed_potatoes", "consumed_tea", "bought_soap", "bought_charcoal",
+        "hunger_no_food", "hunger_sleep_hungry", "hunger_whole_day_night",
+        "confident_public_speaking", "future_goals", "participate_household_decisions",
+        "support_network", "access_to_resources", "leaders_listen_to_women",
+        "main_drinking_water_source", "days_without_water", "time_to_fetch_water", "who_collects_water"]
     ]
 
     for data in annual_member_data:
@@ -317,7 +325,27 @@ def dump_all_data_report(start_date = None, end_date = None, cluster = None, fac
                                  data.estimated_value_of_household_assets, data.household_decision_making, 
                                  data.community_decision_making, data.mortality_children_under_5, 
                                  data.mortality_other_household_members, data.housing, 
-                                 data.have_latrine, data.electricity, data.drinking_water])
+                                 data.have_latrine, data.electricity, data.drinking_water,
+                                 data.floor_material,
+                                data.main_light_source,
+                                data.consumed_tomatoes,
+                                data.consumed_potatoes,
+                                data.consumed_tea,
+                                data.bought_soap,
+                                data.bought_charcoal,
+                                data.hunger_no_food,
+                                data.hunger_sleep_hungry,
+                                data.hunger_whole_day_night,
+                                data.confident_public_speaking,
+                                data.future_goals,
+                                data.participate_household_decisions,
+                                data.support_network,
+                                data.access_to_resources,
+                                data.leaders_listen_to_women,
+                                data.main_drinking_water_source,
+                                data.days_without_water,
+                                data.time_to_fetch_water,
+                                ", ".join(data.who_collects_water) if data.who_collects_water else ""])
 
     six_month_data_list = [
         ["cluster", "group", "member", "active_iga", "iga_activity_code", "iga_capital", "loan_amount_received_shg", 
