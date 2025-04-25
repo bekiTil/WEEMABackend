@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ("data_collection", "0001_initial"),
     ]
 
     operations = [
