@@ -19,6 +19,7 @@ class SixMonthData(BaseModel):
         ("bank", "Bank"),
         ("local_money_lenders", "Local Money Lenders"),
         ("others", "Others"),
+        ("no_loan_from_other_source", "No Loan From Other Source")
     ]
 
     # Choices for Purpose of Loan
