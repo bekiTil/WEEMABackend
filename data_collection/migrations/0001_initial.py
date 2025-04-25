@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("cluster_management", "0006_remove_member_age_member_dob"),
     ]
 
     operations = [
