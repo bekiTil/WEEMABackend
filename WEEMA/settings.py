@@ -79,6 +79,7 @@ MIDDLEWARE = [
 
 # REST Framework and JWT settings
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'WEEMA.exception.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': "rest_framework.pagination.PageNumberPagination",
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',),
