@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 
-def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
+def get_location_level_graph_data(start_date=None, end_date=None, cluster=None, region= None, zone = None, woreda = None):
     
     # Prepare a dictionary for optional date filtering
     date_filters = {}
@@ -17,17 +17,37 @@ def get_location_level_graph_data(start_date=None, end_date=None, cluster=None):
 
     # If a cluster filter is provided, further restrict the groups.
     groups_qs = SelfHelpGroup.objects.all()
+    group_field = 'region'
     if cluster:
         groups_qs = groups_qs.filter(cluster=cluster)
     
+    if region:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(region=region)
+    
+    # decide which field to group by
+    if woreda:
+        group_field = 'zone'
+        groups_qs = groups_qs.filter(woreda=woreda)
+    if zone:
+        group_field = 'zone'
+        groups_qs = groups_qs.filter(Zone=zone)
+        
+    
     # Get distinct, non-empty location values from SelfHelpGroup.
-    locations = groups_qs.exclude(region__isnull=True).exclude(region__exact="").values_list('region', flat=True).distinct()
+    locations = (
+        groups_qs
+        .exclude(**{f"{group_field}__isnull": True})
+        .exclude(**{f"{group_field}__exact": ""})
+        .values_list(group_field, flat=True)
+        .distinct()
+    )
 
     results = {}
 
     for loc in locations:
         # For each location, get all groups at that location
-        groups = groups_qs.filter(region=loc)
+        groups = groups_qs.filter(**{group_field: loc})
         total_groups = groups.count()
 
         # Get all members that belong to these groups
