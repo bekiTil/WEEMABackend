@@ -31,7 +31,7 @@ def get_location_level_graph_data(start_date=None, end_date=None, cluster=None, 
         groups_qs = groups_qs.filter(woreda=woreda)
     if zone:
         group_field = 'zone'
-        groups_qs = groups_qs.filter(Zone=zone)
+        groups_qs = groups_qs.filter(zone=zone)
         
     
     # Get distinct, non-empty location values from SelfHelpGroup.
