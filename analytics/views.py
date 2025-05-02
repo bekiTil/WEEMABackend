@@ -656,6 +656,9 @@ class LocationLevelAnalyticsPDFView(APIView):
         hh_data = request.query_params.get('hh_data', None)
         shg_data = request.query_params.get('shg_data', None)
         member_data = request.query_params.get('member_data', None)
+        region = request.query_params.get('region', None)
+        zone = request.query_params.get('zone', None)
+        woreda = request.query_params.get('woreda', None)
 
         # Parse dates if provided
         start_date = parse_datetime(start_date_str) if start_date_str else None
@@ -666,11 +669,11 @@ class LocationLevelAnalyticsPDFView(APIView):
         group_report = None
         # Get the 2D array reports from the three functions
         if hh_data:
-            hh_report = get_location_level_hh_report(start_date=start_date, end_date=end_date, cluster=cluster)
+            hh_report = get_location_level_hh_report(start_date=start_date, end_date=end_date, cluster=cluster, region= region, zone = zone, woreda = woreda)
         if member_data:
-            loan_saving_report = get_location_level_loan_saving_report(start_date=start_date, end_date=end_date, cluster=cluster)
+            loan_saving_report = get_location_level_loan_saving_report(start_date=start_date, end_date=end_date, cluster=cluster, region= region, zone = zone, woreda = woreda)
         if shg_data:
-            group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster)
+            group_report = get_location_level_group_report(start_date=start_date, end_date=end_date, cluster=cluster, region= region, zone = zone, woreda = woreda)
 
         # Create a BytesIO buffer for the PDF
         # Create a buffer for PDF output

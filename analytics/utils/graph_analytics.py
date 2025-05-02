@@ -22,15 +22,15 @@ def get_location_level_graph_data(start_date=None, end_date=None, cluster=None, 
         groups_qs = groups_qs.filter(cluster=cluster)
     
     if region:
-        group_field = 'woreda'
+        group_field = 'Zone'
         groups_qs = groups_qs.filter(region=region)
     
     # decide which field to group by
     if woreda:
-        group_field = 'zone'
+        group_field = 'woreda'
         groups_qs = groups_qs.filter(woreda=woreda)
     if zone:
-        group_field = 'zone'
+        group_field = 'woreda'
         groups_qs = groups_qs.filter(Zone=zone)
         
     
