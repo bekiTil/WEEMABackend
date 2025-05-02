@@ -6,7 +6,7 @@ from datetime import datetime
 
  
 
-def get_location_level_group_report(start_date = None, end_date = None, cluster = None):
+def get_location_level_group_report(start_date = None, end_date = None, cluster = None, region= None, zone = None, woreda = None):
     # Parse optional date range parameters
     date_filter = Q()
     if start_date and end_date:
@@ -17,22 +17,39 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
         except Exception as e:
             return {"error": str(e)}
 
-    # Get distinct, non-empty location values from SelfHelpGroup
-    locations = (SelfHelpGroup.objects
-                    .exclude(region__isnull=True)
-                    .exclude(region__exact="")
-                    .values_list('region', flat=True)
-                    .distinct())
+    groups_qs = SelfHelpGroup.objects.all()
+    group_field = 'region'
+    if cluster:
+        groups_qs = groups_qs.filter(cluster=cluster)
+    
+    if region:
+        group_field = 'Zone'
+        groups_qs = groups_qs.filter(region=region)
+    
+    # decide which field to group by
+    if woreda:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(woreda=woreda)
+    if zone:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(Zone=zone)
+        
+    
+    # Get distinct, non-empty location values from SelfHelpGroup.
+    locations = (
+        groups_qs
+        .exclude(**{f"{group_field}__isnull": True})
+        .exclude(**{f"{group_field}__exact": ""})
+        .values_list(group_field, flat=True)
+        .distinct()
+    )
 
-    report_data = [["Location", "Total Groups", "Total Members", "Total hh size", "Total Savings", "Total Capital", "Total Loan Circulated","Avg Iga Capital"]]
+    report_data = [[group_field, "Total Groups", "Total Members", "Total hh size", "Total Savings", "Total Capital", "Total Loan Circulated","Avg Iga Capital"]]
 
     # For each unique location, aggregate analytics across groups and members
     for loc in locations:
         # Groups at this location
-        if cluster:
-            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
-        else:
-            groups = SelfHelpGroup.objects.filter(region=loc)
+        groups = groups_qs.filter(**{group_field: loc})
         total_groups = groups.count()
 
         # Members in these groups
@@ -69,7 +86,7 @@ def get_location_level_group_report(start_date = None, end_date = None, cluster 
     return report_data
 
 
-def get_location_level_loan_saving_report(start_date = None, end_date = None, cluster = None):
+def get_location_level_loan_saving_report(start_date = None, end_date = None, cluster = None, region= None, zone = None, woreda = None):
     
     date_filter = Q()
     if start_date and end_date:
@@ -81,18 +98,38 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
             return {"error": str(e)}
         
     # Get distinct, non-empty location values from SelfHelpGroup
+    # If a cluster filter is provided, further restrict the groups.
+    groups_qs = SelfHelpGroup.objects.all()
+    group_field = 'region'
+    if cluster:
+        groups_qs = groups_qs.filter(cluster=cluster)
+    
+    if region:
+        group_field = 'Zone'
+        groups_qs = groups_qs.filter(region=region)
+    
+    # decide which field to group by
+    if woreda:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(woreda=woreda)
+    if zone:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(Zone=zone)
+        
+    
+    # Get distinct, non-empty location values from SelfHelpGroup.
     locations = (
-        SelfHelpGroup.objects
-        .exclude(region__isnull=True)
-        .exclude(region__exact="")
-        .values_list('region', flat=True)
+        groups_qs
+        .exclude(**{f"{group_field}__isnull": True})
+        .exclude(**{f"{group_field}__exact": ""})
+        .values_list(group_field, flat=True)
         .distinct()
     )
     
     # Prepare CSV header
     csv_data = [
         [
-            "Entity", 
+            group_field, 
             "Total Members", 
             "Max Loan Round", 
             "IGA Capital Range",  
@@ -105,11 +142,8 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
     # Iterate over each location and aggregate data
     for loc in locations:
         
-        if cluster:
-            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
-        else:
-            groups = SelfHelpGroup.objects.filter(region=loc)
-            
+        
+        groups = groups_qs.filter(**{group_field: loc})    
         members = Member.objects.filter(group__in=groups)
         total_members = members.count()
         
@@ -163,7 +197,7 @@ def get_location_level_loan_saving_report(start_date = None, end_date = None, cl
 
 
 
-def get_location_level_hh_report(start_date = None, end_date = None, cluster = None):
+def get_location_level_hh_report(start_date = None, end_date = None, cluster = None,  region= None, zone = None, woreda = None):
     
     date_filter = Q()
     if start_date and end_date:
@@ -173,21 +207,39 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
             date_filter = Q(created_at__range=[start_date, end_date])
         except Exception as e:
             return {"error": str(e)}
+    
+    groups_qs = SelfHelpGroup.objects.all()
+    group_field = 'region'
+    if cluster:
+        groups_qs = groups_qs.filter(cluster=cluster)
+    
+    if region:
+        group_field = 'Zone'
+        groups_qs = groups_qs.filter(region=region)
+    
+    # decide which field to group by
+    if woreda:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(woreda=woreda)
+    if zone:
+        group_field = 'woreda'
+        groups_qs = groups_qs.filter(Zone=zone)
+    
         
         
     # Get all locations
     locations = (
-        SelfHelpGroup.objects
-        .exclude(region__isnull=True)
-        .exclude(region__exact="")
-        .values_list('region', flat=True)
+        groups_qs
+        .exclude(**{f"{group_field}__isnull": True})
+        .exclude(**{f"{group_field}__exact": ""})
+        .values_list(group_field, flat=True)
         .distinct()
     )
     
     # Prepare CSV data
     csv_data = [
         [
-            "Regions",
+            group_field,
             "Total Members",
             "Total Household Size",
             "Average Meals Per Day",
@@ -200,10 +252,7 @@ def get_location_level_hh_report(start_date = None, end_date = None, cluster = N
     # Process each location
     for loc in locations:
         # Get groups in this location
-        if cluster:
-            groups = SelfHelpGroup.objects.filter(region=loc, cluster = cluster)
-        else:
-            groups = SelfHelpGroup.objects.filter(region=loc)
+        groups = groups_qs.filter(**{group_field: loc})
         
         # Get all members in those groups
         members = Member.objects.filter(group__in=groups)
