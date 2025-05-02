@@ -1,6 +1,8 @@
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+
+from data_collection.pagination import CustomPageNumberPagination
 from .models import Cluster, SelfHelpGroup, Member
 from user_management.models import WEEMAEntities
 from .serializers import ClusterSerializer, SelfHelpGroupSerializer, MemberSerializer
@@ -227,3 +229,45 @@ class GetListOfLocaton(APIView):
             .distinct()
         )
         return Response({"distinct_locations": list(locations)})
+
+
+class PaginatedMemberViewSet(ModelViewSet):
+    queryset = Member.objects.all().order_by('-updated_at')
+    serializer_class = MemberSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = [
+        'gender',
+        'marital_status',
+        'religion',
+        'is_other_shg_member_in_house',
+        'is_responsible_for_children',
+        'group',
+        'hh_size',
+        'group__cluster',
+        'group__facilitator',
+        'group__cluster'
+    ]
+    search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
+    ordering_fields = ['hh_size', 'created_at', 'updated_at']
+    pagination_class = CustomPageNumberPagination
+    
+    def get_queryset(self):
+        queryset = Member.objects.all().order_by('-updated_at')
+        profile_id = self.request.query_params.get('profile_id', None)
+
+        if profile_id:
+
+            entity = WEEMAEntities.objects.filter(id=profile_id).first()
+            if not entity:
+                return Member.objects.none()
+            else:
+                if entity.user.user_type == "facilitator":
+                    queryset = queryset.filter(group__facilitator = profile_id)
+                elif entity.user.user_type == "cluster_manager":
+                    queryset = queryset.filter(group__cluster__cluster_manager = profile_id)
+                else:
+                    pass
+            
+
+        return queryset
+
