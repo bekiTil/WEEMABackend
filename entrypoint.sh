@@ -33,12 +33,7 @@ until postgres_ready; do
 done
 echo "PostgreSQL is ready."
 
-# Ensure migrations are created for account_management app
-python manage.py makemigrations --noinput
-
-# Run migrations
-echo "Applying database migrations..."
-python manage.py migrate --noinput
+python manage.py migrate cluster_management 0002_selfhelpgroup_group_creation_date
 echo "Database migrations applied."
 python manage.py collectstatic --noinput
 
