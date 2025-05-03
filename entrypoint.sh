@@ -31,10 +31,10 @@ echo "Waiting for PostgreSQL to be ready..."
 until postgres_ready; do
   sleep 1
 done
-echo "PostgreSQL is ready."
-python manage.py makemigrations
+python manage.py makemigrations --noinput
+python manage.py migrate cluster_management 0002_initial --fake
 
-python manage.py migrate cluster_management 0002_selfhelpgroup_group_creation_date
+
 echo "Database migrations applied."
 python manage.py collectstatic --noinput
 
