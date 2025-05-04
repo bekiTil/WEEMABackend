@@ -38,7 +38,6 @@ python manage.py makemigrations --noinput
 
 # Run migrations
 echo "Applying database migrations..."
-python manage.py migrate --noinput
 echo "Database migrations applied."
 python manage.py collectstatic --noinput
 
