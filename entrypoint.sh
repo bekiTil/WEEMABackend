@@ -33,7 +33,6 @@ until postgres_ready; do
 done
 python manage.py makemigrations --noinput
 
-python manage.py migrate --noinput
 echo "Database migrations applied."
 python manage.py collectstatic --noinput
 
