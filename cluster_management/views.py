@@ -247,7 +247,7 @@ class PaginatedMemberViewSet(ModelViewSet):
         'group__facilitator',
         'group__cluster'
     ]
-    search_fields = ['first_name', 'last_name', 'name', 'hh_size', 'religion']
+    search_fields = ['first_name', 'last_name', 'name', 'religion']
     ordering_fields = ['hh_size', 'created_at', 'updated_at']
     pagination_class = CustomPageNumberPagination
     
