@@ -32,7 +32,6 @@ until postgres_ready; do
   sleep 1
 done
 python manage.py makemigrations --noinput
-python manage.py migrate cluster_management 0002_initial --fake
 
 python manage.py migrate --noinput
 echo "Database migrations applied."
